@@ -1,49 +1,44 @@
-\# 🧩 Project Title
+# 🧩 SpendWise
 
-\#\# 📘 Project Description  
-Provide a clear and concise summary of your project here.    
-Explain what it does, why it exists, and any important context.    
-You can also include key technologies, frameworks, or concepts used.
+## 📘 Project Description  
+Shared Expense Tracker is a web application designed to help individuals and groups manage shared finances in a simple and transparent way.  
+Users can record expenses, categorize spending, and view how costs are shared among group members.  
+The project aims to reduce confusion around shared bills and help users stay within their monthly budgets.
 
-\---
+---
 
-\#\# 🚀 Features
+## 🚀 Features
 
-\#\#\# 🧠 Feature 1: \*Feature Name\*  
-\*\*Description:\*\*    
-Briefly describe what this feature does, how it enhances the project, and any important implementation details.
+### 🧠 Feature 1: Expense Input and Categorization  
+**Description:**    
+Users can input expenses and assign them to categories such as bills, groceries, rent, and other common spending types.  
+This feature helps users organize their spending and better understand where their money is going over time.
 
-\*\*Code Link:\*\*    
-\[View Implementation\](./path/to/feature1/code)
+**Code Link:**    
+To be implemented
 
-\---
+---
 
-\#\#\# ⚙️ Feature 2: \*Feature Name\*  
-\*\*Description:\*\*    
-Explain this feature’s purpose and functionality.    
-You can mention dependencies, special algorithms, or modules it relies on.
+### ⚙️ Feature 2: Shared Expense Dashboard  
+**Description:**    
+The dashboard provides a clear summary of total expenses and shows how much each person owes to others within a group.  
+This feature allows users to quickly understand balances without manually calculating shared costs.
 
-\*\*Code Link:\*\*    
-\[View Implementation\](./path/to/feature2/code)
+**Code Link:**    
+To be implemented
 
-\---
+---
 
-\#\#\# 🖥️ Feature 3: \*Feature Name\*  
-\*\*Description:\*\*    
-Summarize this feature’s behavior, its impact, or what problem it solves.    
-Include any notable edge cases or improvements.
+### 🖥️ Feature 3: Monthly Budget Tracking and Notifications  
+**Description:**    
+Users can set monthly budget limits for each expense category.  
+The system will notify users when they are approaching or exceeding their budget, helping them avoid overspending.
 
-\*\*Code Link:\*\*    
-\[View Implementation\](./path/to/feature3/code)
+**Code Link:**    
+To be implemented
 
-\---
+---
 
-\#\# 📄 Additional Information  
-Optionally include:  
-\- Installation or setup instructions    
-\- Example usage    
-\- Contributors or acknowledgments    
-\- License details  
-
-—
-
+## 📄 Additional Information  
+This project is currently in the planning and design phase.  
+Implementation details, setup instructions, and usage examples will be added in future milestones.
