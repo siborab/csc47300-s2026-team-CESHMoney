@@ -2,9 +2,38 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SpendWise Dashboard</title>
+  <link rel="stylesheet" href="./style.css">
 
   <style>
+    /* Ensure header/navbar matches homepage - load style.css rules with higher specificity */
+    body header {
+      background-color: #2c3e50;
+      color: #fff;
+      padding: 1rem 0;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    body header .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    body header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin: 0;
+    }
+    body header nav ul {
+      display: flex;
+      gap: 20px;
+    }
+    body header nav a {
+      color: #fff;
+    }
     :root {
       --bg: #a2b6d4;
       --surface: rgba(255, 255, 255, 0.78);
@@ -18,56 +47,48 @@
       --radius: 14px;
     }
 
-    body {
-      margin: 0;
+    /* Dashboard main content area - gradient background */
+    main.dashboard-main {
       font-family: Arial, sans-serif;
       color: var(--text);
-      /* Advanced CSS : Gradient background */
       background:
         radial-gradient(1200px 800px at 10% 10%, rgba(52, 152, 219, 0.20), transparent 55%),
         radial-gradient(900px 600px at 90% 20%, rgba(46, 204, 113, 0.14), transparent 50%),
         linear-gradient(180deg, #f7f9fc, var(--bg));
+      min-height: calc(100vh - 200px);
     }
 
-    .navbar {
-      /* Advanced CSS : Sticky + glassmorphism */
-      position: sticky;
-      top: 0;
-      z-index: 10;
-
-      background: var(--nav);
-      color: white;
-      padding: 15px 40px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
-    }
-
-    .navbar a {
-      color: white;
-      text-decoration: none;
-      margin-left: 20px;
-      opacity: 0.92;
-      transition: opacity 180ms ease, transform 180ms ease;
-    }
-
-    .navbar a:hover {
-      opacity: 1;
-      transform: translateY(-1px);
-      text-decoration: underline;
-      text-underline-offset: 6px;
-    }
-
-    .container {
+    .dashboard-container {
+      width: 90%;
+      max-width: 1200px;
+      margin: 0 auto;
       padding: 40px;
     }
 
-    h1 {
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 30px;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .dashboard-header h1 {
+      margin: 0;
+    }
+    .btn-add-expense {
+      background: #3498db;
+      color: #fff;
+      border: none;
+      padding: 0.6rem 1.25rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.2s;
+    }
+    .btn-add-expense:hover {
+      background: #2980b9;
     }
 
     .cards {
@@ -167,13 +188,129 @@
     /* Responsive Grid */
     @media (max-width: 980px) {
       .cards { grid-template-columns: repeat(2, 1fr); }
-      .container { padding: 28px; }
+      .dashboard-container { padding: 28px; }
     }
 
     @media (max-width: 620px) {
       .cards { grid-template-columns: 1fr; }
-      .navbar { padding: 12px 18px; flex-wrap: wrap; gap: 10px; }
-      .navbar a { margin-left: 12px; }
+    }
+
+    /* Add Expense Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal {
+      background: var(--surface-solid);
+      border-radius: var(--radius);
+      padding: 2rem;
+      max-width: 480px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    }
+    .modal h2 {
+      margin: 0 0 1.5rem 0;
+      color: var(--text);
+    }
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .form-group select,
+    .form-group input {
+      width: 100%;
+      padding: 0.6rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 1rem;
+      font-family: inherit;
+    }
+    .form-group input[type="number"] {
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+    .form-group input[type="number"]::-webkit-outer-spin-button,
+    .form-group input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    .checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .checkbox-group label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .checkbox-group input[type="checkbox"] {
+      width: auto;
+      cursor: pointer;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    .modal-actions button {
+      flex: 1;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-submit {
+      background: #27ae60;
+      color: #fff;
+    }
+    .btn-submit:hover {
+      background: #219a52;
+    }
+    .btn-cancel {
+      background: #ecf0f1;
+      color: var(--text);
+    }
+    .btn-cancel:hover {
+      background: #bdc3c7;
+    }
+    .modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--muted);
+      line-height: 1;
+    }
+    .modal-close:hover {
+      color: var(--text);
+    }
+    .modal {
+      position: relative;
     }
 
   </style>
@@ -181,19 +318,28 @@
 
 <body>
 
-  <div class="navbar">
-    <div><strong>SpendWise</strong></div>
-    <div>
-      <a href="#">Dashboard</a>
-      <a href="#">Add</a>
-      <a href="#">Split</a>
-      <a href="#">Budget</a>
+  <!-- Header Section (same as home page) -->
+  <header>
+    <div class="container">
+      <h1><a href="index.html">SpendWise</a></h1>
+      <nav>
+        <ul>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="index.html#features">Features</a></li>
+          <li><a href="index.html#about">About</a></li>
+          <li><a href="index.html#contact">Contact</a></li>
+        </ul>
+      </nav>
     </div>
-  </div>
+  </header>
 
-  <div class="container">
+  <main class="dashboard-main">
+  <div class="dashboard-container">
 
-    <h1>Dashboard</h1>
+    <div class="dashboard-header">
+      <h1>Dashboard</h1>
+      <button type="button" class="btn-add-expense" id="openAddExpenseBtn">Add Expense</button>
+    </div>
 
     <div class="cards">
       <div class="card">
@@ -272,6 +418,93 @@
     </div>
 
   </div>
+  </main>
+
+  <!-- Footer Section (same as home page) -->
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 SpendWise. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- Add Expense Modal -->
+  <div class="modal-overlay" id="addExpenseModal">
+    <div class="modal">
+      <button type="button" class="modal-close" id="closeAddExpenseBtn" aria-label="Close">&times;</button>
+      <h2>Add Expense</h2>
+      <form id="addExpenseForm">
+        <div class="form-group">
+          <label for="expenseType">Expense Type</label>
+          <select id="expenseType" name="expenseType" required>
+            <option value="">Select type...</option>
+            <option value="rent">Rent</option>
+            <option value="groceries">Groceries</option>
+            <option value="utilities">Utilities</option>
+            <option value="food">Food</option>
+            <option value="transport">Transport</option>
+            <option value="entertainment">Entertainment</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Split Between</label>
+          <div class="checkbox-group">
+            <label><input type="checkbox" name="splitUsers" value="alice"> Alice</label>
+            <label><input type="checkbox" name="splitUsers" value="bob"> Bob</label>
+            <label><input type="checkbox" name="splitUsers" value="charlie"> Charlie</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="paidBy">Who Paid</label>
+          <select id="paidBy" name="paidBy" required>
+            <option value="">Select who paid...</option>
+            <option value="alice">Alice</option>
+            <option value="bob">Bob</option>
+            <option value="charlie">Charlie</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="amount">Amount ($)</label>
+          <input type="number" id="amount" name="amount" min="0" step="0.01" placeholder="0.00" required>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" id="cancelAddExpenseBtn">Cancel</button>
+          <button type="submit" class="btn-submit">Add Expense</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const modal = document.getElementById('addExpenseModal');
+    const openBtn = document.getElementById('openAddExpenseBtn');
+    const closeBtn = document.getElementById('closeAddExpenseBtn');
+    const cancelBtn = document.getElementById('cancelAddExpenseBtn');
+    const form = document.getElementById('addExpenseForm');
+
+    openBtn.addEventListener('click', () => modal.classList.add('active'));
+    closeBtn.addEventListener('click', () => modal.classList.remove('active'));
+    cancelBtn.addEventListener('click', () => modal.classList.remove('active'));
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.classList.remove('active');
+    });
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const splitUsers = [...form.querySelectorAll('input[name="splitUsers"]:checked')].map(cb => cb.value);
+      if (splitUsers.length === 0) {
+        alert('Please select at least one person to split the expense between.');
+        return;
+      }
+      console.log('Expense added:', {
+        type: form.expenseType.value,
+        splitBetween: splitUsers,
+        paidBy: form.paidBy.value,
+        amount: form.amount.value
+      });
+      modal.classList.remove('active');
+      form.reset();
+    });
+  </script>
 
 </body>
 </html>
