@@ -501,6 +501,23 @@
         paidBy: form.paidBy.value,
         amount: form.amount.value
       });
+      let obj = {
+        type: form.expenseType.value,
+        splitBetween: splitUsers,
+        paidBy: form.paidBy.value,
+        amount: form.amount.value
+      }
+
+      
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(obj, null, 2)], {
+        type: "text/plain"
+      }));
+      a.setAttribute("download", "data.json");
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
       modal.classList.remove('active');
       form.reset();
     });
