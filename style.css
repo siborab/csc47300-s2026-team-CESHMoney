@@ -234,6 +234,313 @@ header nav a:hover::after {
   color: #555;
 }
 
+/* STYLES FROM DASHBOARD.HTML */
+/* Ensure header/navbar matches homepage - load style.css rules with higher specificity */
+    body header {
+      background-color: #2c3e50;
+      color: #fff;
+      padding: 1rem 0;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    body header .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    body header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin: 0;
+    }
+    body header nav ul {
+      display: flex;
+      gap: 20px;
+    }
+    body header nav a {
+      color: #fff;
+    }
+    :root {
+      --bg: #a2b6d4;
+      --surface: rgba(255, 255, 255, 0.78);
+      --surface-solid: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: rgba(0, 0, 0, 0.08);
+      --nav: rgba(44, 62, 80, 0.92);
+      --shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      --shadow-strong: 0 18px 40px rgba(0, 0, 0, 0.14);
+      --radius: 14px;
+    }
+
+    /* Dashboard main content area - gradient background */
+    main.dashboard-main {
+      font-family: Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 800px at 10% 10%, rgba(52, 152, 219, 0.20), transparent 55%),
+        radial-gradient(900px 600px at 90% 20%, rgba(46, 204, 113, 0.14), transparent 50%),
+        linear-gradient(180deg, #f7f9fc, var(--bg));
+      min-height: calc(100vh - 200px);
+    }
+
+    .dashboard-container {
+      width: 90%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px;
+    }
+
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .dashboard-header h1 {
+      margin: 0;
+    }
+    .btn-add-expense {
+      background: #3498db;
+      color: #fff;
+      border: none;
+      padding: 0.6rem 1.25rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.2s;
+    }
+    .btn-add-expense:hover {
+      background: #2980b9;
+    }
+
+    .cards {
+      /* Advanced CSS : CSS Grid (required) + responsive layout */
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .card {
+      background: var(--surface-solid);
+      padding: 20px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      transition: transform 200ms ease, box-shadow 200ms ease;
+    }
+
+    /* Advanced CSS : Hover micro-interactions */
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-strong);
+    }
+
+    .card h3 {
+      margin: 0;
+      font-size: 14px;
+      color: var(--muted);
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+
+    .card p {
+      font-size: 22px;
+      margin: 10px 0 0 0;
+      font-weight: bold;
+    }
+
+    .section {
+      background: var(--surface);
+      padding: 20px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      margin-bottom: 30px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .bar {
+      height: 12px;
+      background: rgba(0, 0, 0, 0.08);
+      border-radius: 999px;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      /* Advanced CSS : Keyframe animation */
+      height: 12px;
+      background: linear-gradient(90deg, rgba(52, 152, 219, 1), rgba(46, 204, 113, 1));
+      width: var(--progress, 60%);
+      border-radius: 999px;
+      animation: fillBar 900ms ease-out 1;
+    }
+
+    @keyframes fillBar {
+      from { width: 0%; }
+      to { width: var(--progress, 60%); }
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      overflow: hidden;
+      border-radius: 12px;
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 2px solid rgba(0, 0, 0, 1);
+      text-align: left;
+    }
+
+    th {
+      background: rgba(0, 0, 0, 0.4);
+      font-weight: 700;
+    }
+
+    /* Nice table polish */
+    tr:nth-child(even) td {
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    /* Responsive Grid */
+    @media (max-width: 980px) {
+      .cards { grid-template-columns: repeat(2, 1fr); }
+      .dashboard-container { padding: 28px; }
+    }
+
+    @media (max-width: 620px) {
+      .cards { grid-template-columns: 1fr; }
+    }
+
+    /* Add Expense Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal {
+      background: var(--surface-solid);
+      border-radius: var(--radius);
+      padding: 2rem;
+      max-width: 480px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    }
+    .modal h2 {
+      margin: 0 0 1.5rem 0;
+      color: var(--text);
+    }
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .form-group select,
+    .form-group input {
+      width: 100%;
+      padding: 0.6rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 1rem;
+      font-family: inherit;
+    }
+    .form-group input[type="number"] {
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+    .form-group input[type="number"]::-webkit-outer-spin-button,
+    .form-group input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    .checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .checkbox-group label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .checkbox-group input[type="checkbox"] {
+      width: auto;
+      cursor: pointer;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    .modal-actions button {
+      flex: 1;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-submit {
+      background: #27ae60;
+      color: #fff;
+    }
+    .btn-submit:hover {
+      background: #219a52;
+    }
+    .btn-cancel {
+      background: #ecf0f1;
+      color: var(--text);
+    }
+    .btn-cancel:hover {
+      background: #bdc3c7;
+    }
+    .modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--muted);
+      line-height: 1;
+    }
+    .modal-close:hover {
+      color: var(--text);
+    }
+    .modal {
+      position: relative;
+    }
+
 /* Footer Section */
 footer {
   background-color: var(--secondary-color);
