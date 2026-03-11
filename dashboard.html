@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpendWise Dashboard</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+
+<body>
+
+  <!-- Header Section (same as home page) -->
+  <header>
+    <div class="container">
+      <h1><a href="index.html">SpendWise</a></h1>
+      <nav>
+        <ul>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="index.html#features">Features</a></li>
+          <li><a href="index.html#about">About</a></li>
+          <li><a href="index.html#contact">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="dashboard-main">
+  <div class="dashboard-container">
+
+    <div class="dashboard-header">
+      <h1>Dashboard</h1>
+      <button type="button" class="btn-add-expense" id="openAddExpenseBtn">Add Expense</button>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <h3>Total Balance</h3>
+        <p id="stat-balance">$12,340</p>
+      </div>
+
+      <div class="card">
+        <h3>Monthly Income</h3>
+        <p>$3,800</p>
+      </div>
+
+      <div class="card">
+        <h3>Monthly Spend</h3>
+        <p id="stat-spend">$2,145</p>
+      </div>
+
+      <div class="card">
+        <h3>Budget Remaining</h3>
+        <p id="stat-budget">$855</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Budget Progress</h2>
+      <p>Food Budget: <strong>$500</strong> • Used: <strong id="progress-text">60%</strong></p>
+      <div class="bar" id="progress-bar-container">
+        <div class="bar-fill" id="budget-progress-fill" style="--progress: 60%;"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Advanced CSS Features Used (HW2)</h2>
+      <ul>
+        <li><strong>CSS Grid + Responsive Layout:</strong> Grid to organize the cards, and the layout automatically adjusts for different size of screen and I applied hover effect to them</li>
+        <li><strong>Sticky Glass Navbar:</strong> The navbar stays on top while scrolling and uses blur for a glass effect.</li>
+        <li><strong>Hover Micro-interactions:</strong> Cards lift with a shadow and links animate on hover using</li>
+        <li><strong>Animated Progress Bar:</strong> There is also a budget progress section with an animated progress bar</li>
+        <li><strong>Table Styling:</strong> At the bottom, I included a transaction table to display recent financial activity </li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>Recent Transactions</h2>
+
+      <table>
+        <tr>
+          <th>Date</th>
+          <th>Description</th>
+          <th>Category</th>
+          <th>Amount</th>
+        </tr>
+
+        <tr>
+          <td>Feb 20</td>
+          <td>Rent</td>
+          <td>Housing</td>
+          <td>-$1450</td>
+        </tr>
+
+        <tr>
+          <td>Feb 18</td>
+          <td>Dinner</td>
+          <td>Food</td>
+          <td>-$49</td>
+        </tr>
+
+        <tr>
+          <td>Feb 05</td>
+          <td>Paycheck</td>
+          <td>Income</td>
+          <td>+$1900</td>
+        </tr>
+
+      </table>
+    </div>
+
+  </div>
+  </main>
+
+  <!-- Footer Section (same as home page) -->
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 SpendWise. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- Add Expense Modal -->
+  <div class="modal-overlay" id="addExpenseModal">
+    <div class="modal">
+      <button type="button" class="modal-close" id="closeAddExpenseBtn" aria-label="Close">&times;</button>
+      <h2>Add Expense</h2>
+      <form id="addExpenseForm">
+        <div class="form-group">
+          <label for="expenseType">Expense Type</label>
+          <select id="expenseType" name="expenseType" required>
+            <option value="">Select type...</option>
+            <option value="Rent">Rent</option>
+            <option value="Groceries">Groceries</option>
+            <option value="Utilities">Utilities</option>
+            <option value="Food">Food</option>
+            <option value="Transport">Transport</option>
+            <option value="Entertainment">Entertainment</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Split Between</label>
+          <div class="checkbox-group">
+            <label><input type="checkbox" name="splitUsers" value="alice"> Alice</label>
+            <label><input type="checkbox" name="splitUsers" value="bob"> Bob</label>
+            <label><input type="checkbox" name="splitUsers" value="charlie"> Charlie</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="paidBy">Who Paid</label>
+          <select id="paidBy" name="paidBy" required>
+            <option value="">Select who paid...</option>
+            <option value="alice">Alice</option>
+            <option value="bob">Bob</option>
+            <option value="charlie">Charlie</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="amount">Amount ($)</label>
+          <input type="number" id="amount" name="amount" min="0" step="0.01" placeholder="0.00" required>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" id="cancelAddExpenseBtn">Cancel</button>
+          <button type="submit" class="btn-submit">Add Expense</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // starting state for db (no inputs yet)
+    let dashboardData = {
+      totalBalance: 12340,
+      monthlySpend: 2145,
+      budgetTotal: 3000, 
+      foodBudget: 500, 
+      foodSpend: 300,
+      transactions: []
+    };
+
+    const modal = document.getElementById('addExpenseModal');
+    const openBtn = document.getElementById('openAddExpenseBtn');
+    const closeBtn = document.getElementById('closeAddExpenseBtn');
+    const cancelBtn = document.getElementById('cancelAddExpenseBtn');
+    const form = document.getElementById('addExpenseForm');
+
+    openBtn.addEventListener('click', () => modal.classList.add('active'));
+    closeBtn.addEventListener('click', () => modal.classList.remove('active'));
+    cancelBtn.addEventListener('click', () => modal.classList.remove('active'));
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.classList.remove('active');
+    });
+    
+    // refresh screen function
+    function refreshUI() {
+      // Update 3 cards
+      document.getElementById('stat-balance').textContent = `$${dashboardData.totalBalance.toLocaleString()}`;
+      document.getElementById('stat-spend').textContent = `$${dashboardData.monthlySpend.toLocaleString()}`;
+      
+      const remaining = dashboardData.budgetTotal - dashboardData.monthlySpend;
+      document.getElementById('stat-budget').textContent = `$${remaining.toLocaleString()}`;
+
+      // Update Budget Progress Bar
+      const realPercent = (dashboardData.foodSpend / dashboardData.foodBudget) * 100;
+      const visualBarPercent = Math.min(realPercent, 100); // Caps the bar at 100% full
+
+      document.getElementById('progress-text').textContent = `${realPercent.toFixed(0)}%`;
+      document.getElementById('budget-progress-fill').style.setProperty('--progress', `${visualBarPercent}%`);
+    }
+
+    // Handle form submission
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const amount = parseFloat(form.amount.value);
+      
+      // Update data vals
+      dashboardData.totalBalance -= amount; // Balance goes down
+      dashboardData.monthlySpend += amount; // Monthly spend goes up
+      // If the category is Food or Groceries, update the specific food spend
+      if (form.expenseType.value === "Food" || form.expenseType.value === "Groceries") {
+        dashboardData.foodSpend += amount;
+      }
+
+      // Add to table
+      const table = document.querySelector('table');
+      const row = table.insertRow(1);
+      row.innerHTML = `
+        <td>${new Date().toLocaleDateString('en-US', {month: 'short', day: 'numeric'})}</td>
+        <td>Expense</td>
+        <td>${form.expenseType.value}</td>
+        <td>-$${amount}</td>
+      `;
+
+      // Update screen
+      refreshUI();
+      
+      // Close modal and reset
+      modal.classList.remove('active');
+      form.reset();
+      
+      console.log("Database Updated:", dashboardData);
+    });
+
+    // Run once on load to sync everything
+    refreshUI();
+  </script>
+
+</body>
+</html>
