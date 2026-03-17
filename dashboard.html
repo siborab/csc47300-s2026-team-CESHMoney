@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SpendWise Dashboard</title>
   <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./dashboard.css">
 </head>
 
 <body>
@@ -18,6 +19,15 @@
           <li><a href="dashboard.html">Dashboard</a></li>
           <li><a href="index.html#features">Features</a></li>
           <li><a href="index.html#about">About</a></li>
+          <li class="login-menu">
+            <details>
+              <summary>Login</summary>
+              <ul class="login-dropdown">
+                <li><a href="signin.html">Sign In</a></li>
+                <li><a href="signup.html">Sign Up</a></li>
+              </ul>
+            </details>
+          </li>
           <li><a href="index.html#contact">Contact</a></li>
         </ul>
       </nav>
@@ -34,28 +44,42 @@
 
     <div class="cards">
       <div class="card">
+<<<<<<< HEAD
         <h3>Total Balance</h3>
         <p id="stat-balance">$12,340</p>
+=======
+        <h3>Monthly Balance</h3>
+        <p id="totalBalanceValue">$0</p>
+>>>>>>> ff58eb8 (Add login/logout UI, sign-in/sign-up pages, JSON-backed frontend auth, and responsive dashboard expense/budget updates)
       </div>
 
       <div class="card">
         <h3>Monthly Income</h3>
-        <p>$3,800</p>
+        <p id="monthlyIncomeValue">$0</p>
       </div>
 
       <div class="card">
         <h3>Monthly Spend</h3>
+<<<<<<< HEAD
         <p id="stat-spend">$2,145</p>
+=======
+        <p id="monthlySpendValue">$0</p>
+>>>>>>> ff58eb8 (Add login/logout UI, sign-in/sign-up pages, JSON-backed frontend auth, and responsive dashboard expense/budget updates)
       </div>
 
       <div class="card">
         <h3>Budget Remaining</h3>
+<<<<<<< HEAD
         <p id="stat-budget">$855</p>
+=======
+        <p id="budgetRemainingValue">$0</p>
+>>>>>>> ff58eb8 (Add login/logout UI, sign-in/sign-up pages, JSON-backed frontend auth, and responsive dashboard expense/budget updates)
       </div>
     </div>
 
     <div class="section">
       <h2>Budget Progress</h2>
+<<<<<<< HEAD
       <p>Food Budget: <strong>$500</strong> • Used: <strong id="progress-text">60%</strong></p>
       <div class="bar" id="progress-bar-container">
         <div class="bar-fill" id="budget-progress-fill" style="--progress: 60%;"></div>
@@ -71,41 +95,27 @@
         <li><strong>Animated Progress Bar:</strong> There is also a budget progress section with an animated progress bar</li>
         <li><strong>Table Styling:</strong> At the bottom, I included a transaction table to display recent financial activity </li>
       </ul>
+=======
+      <div id="budgetProgressList"></div>
+>>>>>>> ff58eb8 (Add login/logout UI, sign-in/sign-up pages, JSON-backed frontend auth, and responsive dashboard expense/budget updates)
     </div>
 
     <div class="section">
       <h2>Recent Transactions</h2>
-
-      <table>
-        <tr>
-          <th>Date</th>
-          <th>Description</th>
-          <th>Category</th>
-          <th>Amount</th>
-        </tr>
-
-        <tr>
-          <td>Feb 20</td>
-          <td>Rent</td>
-          <td>Housing</td>
-          <td>-$1450</td>
-        </tr>
-
-        <tr>
-          <td>Feb 18</td>
-          <td>Dinner</td>
-          <td>Food</td>
-          <td>-$49</td>
-        </tr>
-
-        <tr>
-          <td>Feb 05</td>
-          <td>Paycheck</td>
-          <td>Income</td>
-          <td>+$1900</td>
-        </tr>
-
-      </table>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Description</th>
+              <th>Category</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody id="transactionTableBody">
+          </tbody>
+        </table>
+      </div>
     </div>
 
   </div>
@@ -138,26 +148,36 @@
           </select>
         </div>
         <div class="form-group">
-          <label>Split Between</label>
-          <div class="checkbox-group">
-            <label><input type="checkbox" name="splitUsers" value="alice"> Alice</label>
-            <label><input type="checkbox" name="splitUsers" value="bob"> Bob</label>
-            <label><input type="checkbox" name="splitUsers" value="charlie"> Charlie</label>
+          <label for="baseAmount">Amount Before Tip ($)</label>
+          <input type="number" id="baseAmount" name="baseAmount" min="0" step="0.01" placeholder="0.00" required>
+        </div>
+        <div class="form-group">
+          <label for="tipPercent">Tip (%)</label>
+          <input type="number" id="tipPercent" name="tipPercent" min="0" step="0.01" value="0">
+        </div>
+        <div class="form-group">
+          <label for="expenseNote">Note (Optional)</label>
+          <input type="text" id="expenseNote" name="expenseNote" maxlength="120" placeholder="e.g. dinner with friends">
+        </div>
+        <div class="form-group total-preview">
+          <span>Total With Tip:</span>
+          <strong id="totalWithTipValue">$0.00</strong>
+        </div>
+        <div class="form-group split-toggle-row">
+          <label><input type="checkbox" id="isSplitExpense" name="isSplitExpense"> Split this expense</label>
+        </div>
+        <div id="splitSection" class="split-section hidden">
+          <div class="form-group">
+            <label>Split With (Auto-equal split)</label>
+            <div class="split-user-list">
+              <label><input type="checkbox" class="split-user-check" value="alice"> Alice</label>
+              <label><input type="checkbox" class="split-user-check" value="bob"> Bob</label>
+              <label><input type="checkbox" class="split-user-check" value="charlie"> Charlie</label>
+            </div>
           </div>
+          <p id="splitPreview" class="split-preview"></p>
         </div>
-        <div class="form-group">
-          <label for="paidBy">Who Paid</label>
-          <select id="paidBy" name="paidBy" required>
-            <option value="">Select who paid...</option>
-            <option value="alice">Alice</option>
-            <option value="bob">Bob</option>
-            <option value="charlie">Charlie</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="amount">Amount ($)</label>
-          <input type="number" id="amount" name="amount" min="0" step="0.01" placeholder="0.00" required>
-        </div>
+        <p id="addExpenseMessage" class="auth-message" aria-live="polite"></p>
         <div class="modal-actions">
           <button type="button" class="btn-cancel" id="cancelAddExpenseBtn">Cancel</button>
           <button type="submit" class="btn-submit">Add Expense</button>
@@ -166,6 +186,7 @@
     </div>
   </div>
 
+<<<<<<< HEAD
   <script>
     // starting state for db (no inputs yet)
     let dashboardData = {
@@ -244,6 +265,10 @@
     // Run once on load to sync everything
     refreshUI();
   </script>
+=======
+  <script src="./auth.js"></script>
+  <script src="./dashboard.js?v=12"></script>
+>>>>>>> ff58eb8 (Add login/logout UI, sign-in/sign-up pages, JSON-backed frontend auth, and responsive dashboard expense/budget updates)
 
 </body>
 </html>
