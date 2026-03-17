@@ -1,6 +1,6 @@
 const EXPENSES_DB_KEY = "spendwise_expenses_db_v1";
 const EXPENSES_DB_VERSION_KEY = "spendwise_expenses_db_version";
-const EXPENSES_DB_VERSION = "5";
+const EXPENSES_DB_VERSION = "6";
 const BUDGET_CATEGORY_ORDER = [
   "rent",
   "groceries",
@@ -73,11 +73,19 @@ function writeLocalDb(db) {
   localStorage.setItem(EXPENSES_DB_VERSION_KEY, EXPENSES_DB_VERSION);
 }
 
+function normalizeCategory(rawCategory) {
+  const category = String(rawCategory || "").trim().toLowerCase();
+  if (category === "housing") {
+    return "rent";
+  }
+  return BUDGET_CATEGORY_ORDER.includes(category) ? category : "other";
+}
+
 function normalizeDbShape(db) {
   const normalizedTransactions = Array.isArray(db.transactions)
     ? db.transactions.map((item) => ({
         ...item,
-        category: item.category === "housing" ? "rent" : item.category,
+        category: normalizeCategory(item.category),
         createdAt: item.createdAt || `${item.date}T00:00:00`
       }))
     : [];
@@ -375,7 +383,7 @@ function initModalHandlers(dbRef) {
       date: new Date().toISOString().slice(0, 10),
       createdAt: new Date().toISOString(),
       description,
-      category: expenseType,
+      category: normalizeCategory(expenseType),
       amount: -Math.abs(totalAmount),
       type: "expense",
       baseAmount,

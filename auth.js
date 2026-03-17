@@ -88,15 +88,52 @@ async function initSignIn() {
         fullName: matchedUser.fullName,
         email: matchedUser.email
       });
-      setMessage(messageEl, "Login success", "success");
+      setMessage(messageEl, "Login success, redirecting...", "success");
       applyNavAuthState();
+      setTimeout(() => {
+        window.location.href = "index.html";
+      }, 700);
     } catch (error) {
       setMessage(messageEl, "Cannot read user.json", "error");
     }
   });
 }
 
+function initSignUp() {
+  const form = document.getElementById("signupForm");
+  if (!form) {
+    return;
+  }
+
+  const messageEl = document.getElementById("authMessage");
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    const fullName = form.fullName.value.trim();
+    const email = normalizeEmail(form.email.value);
+    const password = form.password.value;
+
+    if (!fullName || !email || !password) {
+      setMessage(messageEl, "Please fill all required fields.", "error");
+      return;
+    }
+
+    if (password.length < 6) {
+      setMessage(messageEl, "Password must be at least 6 characters.", "error");
+      return;
+    }
+
+    setMessage(
+      messageEl,
+      "Sign-up submitted. Demo mode only: add this account to user.json to enable login.",
+      "success"
+    );
+    form.reset();
+  });
+}
+
 (function initAuth() {
   applyNavAuthState();
   initSignIn();
+  initSignUp();
 })();
