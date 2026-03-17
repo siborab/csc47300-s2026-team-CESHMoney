@@ -44,13 +44,8 @@
 
     <div class="cards">
       <div class="card">
-<<<<<<< HEAD
-        <h3>Total Balance</h3>
-        <p id="stat-balance">$12,340</p>
-=======
         <h3>Monthly Balance</h3>
         <p id="totalBalanceValue">$0</p>
->>>>>>> ff58eb8 (Add login/logout UI, sign-in/sign-up pages, JSON-backed frontend auth, and responsive dashboard expense/budget updates)
       </div>
 
       <div class="card">
@@ -60,44 +55,18 @@
 
       <div class="card">
         <h3>Monthly Spend</h3>
-<<<<<<< HEAD
-        <p id="stat-spend">$2,145</p>
-=======
         <p id="monthlySpendValue">$0</p>
->>>>>>> ff58eb8 (Add login/logout UI, sign-in/sign-up pages, JSON-backed frontend auth, and responsive dashboard expense/budget updates)
       </div>
 
       <div class="card">
         <h3>Budget Remaining</h3>
-<<<<<<< HEAD
-        <p id="stat-budget">$855</p>
-=======
         <p id="budgetRemainingValue">$0</p>
->>>>>>> ff58eb8 (Add login/logout UI, sign-in/sign-up pages, JSON-backed frontend auth, and responsive dashboard expense/budget updates)
       </div>
     </div>
 
     <div class="section">
       <h2>Budget Progress</h2>
-<<<<<<< HEAD
-      <p>Food Budget: <strong>$500</strong> • Used: <strong id="progress-text">60%</strong></p>
-      <div class="bar" id="progress-bar-container">
-        <div class="bar-fill" id="budget-progress-fill" style="--progress: 60%;"></div>
-      </div>
-    </div>
-
-    <div class="section">
-      <h2>Advanced CSS Features Used (HW2)</h2>
-      <ul>
-        <li><strong>CSS Grid + Responsive Layout:</strong> Grid to organize the cards, and the layout automatically adjusts for different size of screen and I applied hover effect to them</li>
-        <li><strong>Sticky Glass Navbar:</strong> The navbar stays on top while scrolling and uses blur for a glass effect.</li>
-        <li><strong>Hover Micro-interactions:</strong> Cards lift with a shadow and links animate on hover using</li>
-        <li><strong>Animated Progress Bar:</strong> There is also a budget progress section with an animated progress bar</li>
-        <li><strong>Table Styling:</strong> At the bottom, I included a transaction table to display recent financial activity </li>
-      </ul>
-=======
       <div id="budgetProgressList"></div>
->>>>>>> ff58eb8 (Add login/logout UI, sign-in/sign-up pages, JSON-backed frontend auth, and responsive dashboard expense/budget updates)
     </div>
 
     <div class="section">
@@ -186,89 +155,8 @@
     </div>
   </div>
 
-<<<<<<< HEAD
-  <script>
-    // starting state for db (no inputs yet)
-    let dashboardData = {
-      totalBalance: 12340,
-      monthlySpend: 2145,
-      budgetTotal: 3000, 
-      foodBudget: 500, 
-      foodSpend: 300,
-      transactions: []
-    };
-
-    const modal = document.getElementById('addExpenseModal');
-    const openBtn = document.getElementById('openAddExpenseBtn');
-    const closeBtn = document.getElementById('closeAddExpenseBtn');
-    const cancelBtn = document.getElementById('cancelAddExpenseBtn');
-    const form = document.getElementById('addExpenseForm');
-
-    openBtn.addEventListener('click', () => modal.classList.add('active'));
-    closeBtn.addEventListener('click', () => modal.classList.remove('active'));
-    cancelBtn.addEventListener('click', () => modal.classList.remove('active'));
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) modal.classList.remove('active');
-    });
-    
-    // refresh screen function
-    function refreshUI() {
-      // Update 3 cards
-      document.getElementById('stat-balance').textContent = `$${dashboardData.totalBalance.toLocaleString()}`;
-      document.getElementById('stat-spend').textContent = `$${dashboardData.monthlySpend.toLocaleString()}`;
-      
-      const remaining = dashboardData.budgetTotal - dashboardData.monthlySpend;
-      document.getElementById('stat-budget').textContent = `$${remaining.toLocaleString()}`;
-
-      // Update Budget Progress Bar
-      const realPercent = (dashboardData.foodSpend / dashboardData.foodBudget) * 100;
-      const visualBarPercent = Math.min(realPercent, 100); // Caps the bar at 100% full
-
-      document.getElementById('progress-text').textContent = `${realPercent.toFixed(0)}%`;
-      document.getElementById('budget-progress-fill').style.setProperty('--progress', `${visualBarPercent}%`);
-    }
-
-    // Handle form submission
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      
-      const amount = parseFloat(form.amount.value);
-      
-      // Update data vals
-      dashboardData.totalBalance -= amount; // Balance goes down
-      dashboardData.monthlySpend += amount; // Monthly spend goes up
-      // If the category is Food or Groceries, update the specific food spend
-      if (form.expenseType.value === "Food" || form.expenseType.value === "Groceries") {
-        dashboardData.foodSpend += amount;
-      }
-
-      // Add to table
-      const table = document.querySelector('table');
-      const row = table.insertRow(1);
-      row.innerHTML = `
-        <td>${new Date().toLocaleDateString('en-US', {month: 'short', day: 'numeric'})}</td>
-        <td>Expense</td>
-        <td>${form.expenseType.value}</td>
-        <td>-$${amount}</td>
-      `;
-
-      // Update screen
-      refreshUI();
-      
-      // Close modal and reset
-      modal.classList.remove('active');
-      form.reset();
-      
-      console.log("Database Updated:", dashboardData);
-    });
-
-    // Run once on load to sync everything
-    refreshUI();
-  </script>
-=======
   <script src="./auth.js"></script>
   <script src="./dashboard.js?v=12"></script>
->>>>>>> ff58eb8 (Add login/logout UI, sign-in/sign-up pages, JSON-backed frontend auth, and responsive dashboard expense/budget updates)
 
 </body>
 </html>
