@@ -1,0 +1,71 @@
+{
+  "monthlyIncome": 4200,
+  "categoryBudgets": {
+    "rent": 1600,
+    "groceries": 450,
+    "utilities": 300,
+    "food": 500,
+    "transport": 250,
+    "entertainment": 200,
+    "other": 200
+  },
+  "startingBalance": 12340,
+  "transactions": [
+    {
+      "date": "2026-03-17",
+      "description": "Rent",
+      "category": "rent",
+      "amount": -1450,
+      "type": "expense"
+    },
+    {
+      "date": "2026-03-15",
+      "description": "Dinner",
+      "category": "food",
+      "amount": -49,
+      "type": "expense"
+    },
+    {
+      "date": "2026-03-16",
+      "description": "Groceries",
+      "category": "groceries",
+      "amount": -180,
+      "type": "expense"
+    },
+    {
+      "date": "2026-03-14",
+      "description": "Electric Bill",
+      "category": "utilities",
+      "amount": -120,
+      "type": "expense"
+    },
+    {
+      "date": "2026-03-12",
+      "description": "Metro Pass",
+      "category": "transport",
+      "amount": -90,
+      "type": "expense"
+    },
+    {
+      "date": "2026-03-10",
+      "description": "Movie Night",
+      "category": "entertainment",
+      "amount": -60,
+      "type": "expense"
+    },
+    {
+      "date": "2026-03-08",
+      "description": "Household Items",
+      "category": "other",
+      "amount": -40,
+      "type": "expense"
+    },
+    {
+      "date": "2026-03-05",
+      "description": "Paycheck",
+      "category": "income",
+      "amount": 1900,
+      "type": "income"
+    }
+  ]
+}

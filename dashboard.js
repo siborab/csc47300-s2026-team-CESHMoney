@@ -1,0 +1,415 @@
+const EXPENSES_DB_KEY = "spendwise_expenses_db_v1";
+const EXPENSES_DB_VERSION_KEY = "spendwise_expenses_db_version";
+const EXPENSES_DB_VERSION = "5";
+const BUDGET_CATEGORY_ORDER = [
+  "rent",
+  "groceries",
+  "utilities",
+  "food",
+  "transport",
+  "entertainment",
+  "other"
+];
+
+const DEFAULT_CATEGORY_BUDGETS = {
+  rent: 1600,
+  groceries: 450,
+  utilities: 300,
+  food: 500,
+  transport: 250,
+  entertainment: 200,
+  other: 200
+};
+
+function formatCurrency(amount) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 2
+  }).format(amount);
+}
+
+function formatTableAmount(amount) {
+  const sign = amount >= 0 ? "+" : "-";
+  return `${sign}$${Math.abs(amount).toFixed(2)}`;
+}
+
+function formatShortDate(isoDate) {
+  const date = new Date(`${isoDate}T00:00:00`);
+  if (Number.isNaN(date.getTime())) {
+    return isoDate;
+  }
+  return date.toLocaleDateString("en-US", { month: "short", day: "2-digit" });
+}
+
+function isInCurrentMonth(isoDate) {
+  const date = new Date(`${isoDate}T00:00:00`);
+  const now = new Date();
+  return (
+    !Number.isNaN(date.getTime()) &&
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth()
+  );
+}
+
+function readLocalDb() {
+  try {
+    const raw = localStorage.getItem(EXPENSES_DB_KEY);
+    if (!raw) {
+      return null;
+    }
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed.transactions)) {
+      return null;
+    }
+    return parsed;
+  } catch (error) {
+    return null;
+  }
+}
+
+function writeLocalDb(db) {
+  localStorage.setItem(EXPENSES_DB_KEY, JSON.stringify(db));
+  localStorage.setItem(EXPENSES_DB_VERSION_KEY, EXPENSES_DB_VERSION);
+}
+
+function normalizeDbShape(db) {
+  const normalizedTransactions = Array.isArray(db.transactions)
+    ? db.transactions.map((item) => ({
+        ...item,
+        category: item.category === "housing" ? "rent" : item.category,
+        createdAt: item.createdAt || `${item.date}T00:00:00`
+      }))
+    : [];
+
+  return {
+    monthlyIncome: Number(db.monthlyIncome || 0),
+    categoryBudgets: {
+      ...DEFAULT_CATEGORY_BUDGETS,
+      ...(db.categoryBudgets || {})
+    },
+    startingBalance: Number(db.startingBalance || 0),
+    transactions: normalizedTransactions
+  };
+}
+
+async function loadSeedDb() {
+  const response = await fetch("./expenses.json", { cache: "no-store" });
+  const data = await response.json();
+  return normalizeDbShape(data);
+}
+
+function categoryLabel(category) {
+  const labels = {
+    rent: "Rent",
+    groceries: "Groceries",
+    utilities: "Utilities",
+    food: "Food",
+    transport: "Transport",
+    entertainment: "Entertainment",
+    other: "Other",
+    housing: "Housing",
+    income: "Income"
+  };
+  return labels[category] || "Other";
+}
+
+function transactionSortValue(item) {
+  const datePart = item.date || "";
+  const createdPart = item.createdAt || `${datePart}T00:00:00`;
+  return `${datePart}|${createdPart}`;
+}
+
+function renderBudgetProgress(db) {
+  const progressListEl = document.getElementById("budgetProgressList");
+  if (!progressListEl) {
+    return 0;
+  }
+
+  const monthlyTransactions = db.transactions.filter((item) => isInCurrentMonth(item.date));
+  const html = BUDGET_CATEGORY_ORDER.map((category) => {
+    const budget = Number(db.categoryBudgets[category] || 0);
+    const used = monthlyTransactions
+      .filter((item) => Number(item.amount) < 0 && item.category === category)
+      .reduce((sum, item) => sum + Math.abs(Number(item.amount)), 0);
+
+    const usedPercent = budget > 0 ? Math.min(100, (used / budget) * 100) : 0;
+    return `
+      <div class="budget-item">
+        <p>${categoryLabel(category)} Used: <strong>${formatCurrency(used)} (${Math.round(usedPercent)}%)</strong> • Budget: <strong>${formatCurrency(budget)}</strong></p>
+        <div class="bar" style="--progress: ${Math.round(usedPercent)}%;">
+          <div class="bar-fill"></div>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  progressListEl.innerHTML = html;
+
+  const totalBudget = BUDGET_CATEGORY_ORDER.reduce(
+    (sum, category) => sum + Number(db.categoryBudgets[category] || 0),
+    0
+  );
+  const totalUsed = monthlyTransactions
+    .filter((item) => Number(item.amount) < 0)
+    .reduce((sum, item) => sum + Math.abs(Number(item.amount)), 0);
+
+  return Math.max(0, totalBudget - totalUsed);
+}
+
+function renderDashboard(db) {
+  const tableBody = document.getElementById("transactionTableBody");
+  const totalBalanceEl = document.getElementById("totalBalanceValue");
+  const monthlyIncomeEl = document.getElementById("monthlyIncomeValue");
+  const monthlySpendEl = document.getElementById("monthlySpendValue");
+  const budgetRemainingEl = document.getElementById("budgetRemainingValue");
+
+  if (!tableBody) {
+    return;
+  }
+
+  const monthlyTransactions = db.transactions.filter((item) => isInCurrentMonth(item.date));
+  const transactions = [...monthlyTransactions].sort((a, b) => {
+    const aKey = transactionSortValue(a);
+    const bKey = transactionSortValue(b);
+    if (aKey === bKey) {
+      return 0;
+    }
+    return aKey < bKey ? 1 : -1;
+  });
+  tableBody.innerHTML = transactions.length > 0 ? transactions
+    .map(
+      (item) => `
+        <tr>
+          <td>${formatShortDate(item.date)}</td>
+          <td>${item.description}</td>
+          <td>${categoryLabel(item.category)}</td>
+          <td>${formatTableAmount(item.amount)}</td>
+        </tr>
+      `
+    )
+    .join("") : `
+      <tr>
+        <td colspan="4">No transactions for this month.</td>
+      </tr>
+    `;
+
+  const monthlyIncome = Number(db.monthlyIncome || 0);
+
+  const monthlySpend = monthlyTransactions
+    .filter((item) => Number(item.amount) < 0)
+    .reduce((sum, item) => sum + Math.abs(Number(item.amount)), 0);
+  const budgetRemaining = renderBudgetProgress(db);
+  const totalBalance = monthlyIncome - monthlySpend;
+
+  totalBalanceEl.textContent = formatCurrency(totalBalance);
+  monthlyIncomeEl.textContent = formatCurrency(monthlyIncome);
+  monthlySpendEl.textContent = formatCurrency(monthlySpend);
+  budgetRemainingEl.textContent = formatCurrency(budgetRemaining);
+}
+
+function setAddExpenseMessage(text, type) {
+  const messageEl = document.getElementById("addExpenseMessage");
+  if (!messageEl) {
+    return;
+  }
+  messageEl.textContent = text;
+  messageEl.className = `auth-message ${type}`;
+}
+
+function expenseTypeToDescription(type) {
+  const labels = {
+    rent: "Rent",
+    groceries: "Groceries",
+    utilities: "Utilities",
+    food: "Food",
+    transport: "Transport",
+    entertainment: "Entertainment",
+    other: "Other"
+  };
+  return labels[type] || "Expense";
+}
+
+function initModalHandlers(dbRef) {
+  const modal = document.getElementById("addExpenseModal");
+  const openBtn = document.getElementById("openAddExpenseBtn");
+  const closeBtn = document.getElementById("closeAddExpenseBtn");
+  const cancelBtn = document.getElementById("cancelAddExpenseBtn");
+  const form = document.getElementById("addExpenseForm");
+  const splitToggle = document.getElementById("isSplitExpense");
+  const splitSection = document.getElementById("splitSection");
+  const totalWithTipEl = document.getElementById("totalWithTipValue");
+  const splitPreviewEl = document.getElementById("splitPreview");
+  const splitUserChecks = [...document.querySelectorAll(".split-user-check")];
+
+  if (
+    !modal || !openBtn || !closeBtn || !cancelBtn || !form ||
+    !splitToggle || !splitSection || !totalWithTipEl || !splitPreviewEl
+  ) {
+    return;
+  }
+
+  const getTotalWithTip = () => {
+    const baseAmount = Number(form.baseAmount.value);
+    const tipPercent = Number(form.tipPercent.value || 0);
+    if (!Number.isFinite(baseAmount) || baseAmount <= 0) {
+      return 0;
+    }
+    return baseAmount + (baseAmount * Math.max(0, tipPercent) / 100);
+  };
+
+  const refreshTotalWithTip = () => {
+    totalWithTipEl.textContent = formatCurrency(getTotalWithTip());
+  };
+
+  const buildEqualSplit = (users, totalAmount) => {
+    const totalCents = Math.round(totalAmount * 100);
+    const base = Math.floor(totalCents / users.length);
+    let remainder = totalCents - base * users.length;
+    return users.map((user) => {
+      const cents = base + (remainder > 0 ? 1 : 0);
+      remainder = Math.max(0, remainder - 1);
+      return { user, amount: cents / 100 };
+    });
+  };
+
+  const refreshSplitPreview = () => {
+    if (!splitToggle.checked) {
+      splitPreviewEl.textContent = "";
+      return;
+    }
+    const selectedUsers = splitUserChecks.filter((check) => check.checked).map((check) => check.value);
+    const totalAmount = getTotalWithTip();
+    if (selectedUsers.length === 0 || totalAmount <= 0) {
+      splitPreviewEl.textContent = "Select people to see auto split.";
+      return;
+    }
+    const splitDetails = buildEqualSplit(selectedUsers, totalAmount);
+    const preview = splitDetails.map((item) => `${item.user}: ${formatCurrency(item.amount)}`).join(" • ");
+    splitPreviewEl.textContent = `Auto split -> ${preview}`;
+  };
+
+  const setSplitSectionState = () => {
+    splitSection.classList.toggle("hidden", !splitToggle.checked);
+    if (!splitToggle.checked) {
+      splitUserChecks.forEach((check) => {
+        check.checked = false;
+      });
+    }
+    refreshSplitPreview();
+  };
+
+  const resetModalForm = () => {
+    form.reset();
+    setAddExpenseMessage("", "");
+    refreshTotalWithTip();
+    setSplitSectionState();
+  };
+
+  const closeModal = () => {
+    modal.classList.remove("active");
+    resetModalForm();
+  };
+
+  openBtn.addEventListener("click", () => {
+    modal.classList.add("active");
+    refreshTotalWithTip();
+    setSplitSectionState();
+  });
+  closeBtn.addEventListener("click", closeModal);
+  cancelBtn.addEventListener("click", closeModal);
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal) {
+      closeModal();
+    }
+  });
+  form.baseAmount.addEventListener("input", refreshTotalWithTip);
+  form.baseAmount.addEventListener("input", refreshSplitPreview);
+  form.tipPercent.addEventListener("input", refreshTotalWithTip);
+  form.tipPercent.addEventListener("input", refreshSplitPreview);
+  splitToggle.addEventListener("change", setSplitSectionState);
+
+  splitUserChecks.forEach((check) => {
+    check.addEventListener("change", refreshSplitPreview);
+  });
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    const expenseType = form.expenseType.value;
+    const baseAmount = Number(form.baseAmount.value);
+    const tipPercent = Number(form.tipPercent.value || 0);
+    const note = form.expenseNote.value.trim();
+    const totalAmount = getTotalWithTip();
+
+    if (!expenseType || !Number.isFinite(baseAmount) || baseAmount <= 0) {
+      setAddExpenseMessage("Please fill all fields with a valid amount.", "error");
+      return;
+    }
+
+    if (!Number.isFinite(tipPercent) || tipPercent < 0) {
+      setAddExpenseMessage("Tip must be zero or a positive value.", "error");
+      return;
+    }
+
+    let splitDetails = [];
+
+    if (splitToggle.checked) {
+      const selectedUsers = splitUserChecks
+        .filter((check) => check.checked)
+        .map((check) => check.value);
+
+      if (selectedUsers.length === 0) {
+        setAddExpenseMessage("Please choose at least one person for split.", "error");
+        return;
+      }
+
+      splitDetails = buildEqualSplit(selectedUsers, totalAmount);
+    }
+
+    const description = note
+      ? `${expenseTypeToDescription(expenseType)} - ${note}`
+      : expenseTypeToDescription(expenseType);
+
+    dbRef.current.transactions.unshift({
+      date: new Date().toISOString().slice(0, 10),
+      createdAt: new Date().toISOString(),
+      description,
+      category: expenseType,
+      amount: -Math.abs(totalAmount),
+      type: "expense",
+      baseAmount,
+      tipPercent,
+      paidBy: "self",
+      splitBetween: splitDetails
+    });
+
+    writeLocalDb(dbRef.current);
+    renderDashboard(dbRef.current);
+
+    setAddExpenseMessage("Expense added successfully.", "success");
+    setTimeout(closeModal, 500);
+  });
+}
+
+(async function initDashboard() {
+  const localDbVersion = localStorage.getItem(EXPENSES_DB_VERSION_KEY);
+  const localDb = localDbVersion === EXPENSES_DB_VERSION ? readLocalDb() : null;
+  const dbRef = { current: localDb ? normalizeDbShape(localDb) : null };
+  if (!dbRef.current) {
+    try {
+      dbRef.current = await loadSeedDb();
+      writeLocalDb(dbRef.current);
+    } catch (error) {
+      dbRef.current = normalizeDbShape({
+        monthlyIncome: 0,
+        categoryBudgets: DEFAULT_CATEGORY_BUDGETS,
+        startingBalance: 0,
+        transactions: []
+      });
+    }
+  }
+
+  renderDashboard(dbRef.current);
+  initModalHandlers(dbRef);
+})();

@@ -1,0 +1,10 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "fullName": "Demo User",
+      "email": "demo@spendwise.com",
+      "password": "demo123"
+    }
+  ]
+}

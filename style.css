@@ -103,6 +103,206 @@ header nav a:hover::after {
   width: 100%;
 }
 
+/* Login dropdown in navbar */
+.login-menu details {
+  position: relative;
+}
+
+.login-menu summary {
+  cursor: pointer;
+  color: var(--text-light);
+  list-style: none;
+  transition: color var(--transition-speed);
+}
+
+.login-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.login-menu summary::after {
+  content: "";
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -5px;
+  left: 0;
+  background-color: var(--primary-color);
+  transition: width var(--transition-speed);
+}
+
+.login-menu summary:hover {
+  color: var(--primary-color);
+}
+
+.login-menu details[open] summary::after,
+.login-menu summary:hover::after {
+  width: 100%;
+}
+
+.login-dropdown {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  min-width: 150px;
+  background: var(--background-white);
+  border-radius: var(--border-radius);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+  padding: 0.4rem 0;
+  z-index: 1200;
+}
+
+.login-dropdown li {
+  width: 100%;
+}
+
+.login-dropdown a {
+  display: block;
+  color: var(--secondary-color);
+  padding: 0.55rem 0.9rem;
+  font-weight: 600;
+}
+
+.login-dropdown a:hover {
+  background: #eef5fb;
+  color: var(--primary-color);
+}
+
+.logout-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-light);
+  font: inherit;
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+  transition: color var(--transition-speed);
+}
+
+.logout-btn::after {
+  content: "";
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -5px;
+  left: 0;
+  background-color: var(--primary-color);
+  transition: width var(--transition-speed);
+}
+
+.logout-btn:hover {
+  color: var(--primary-color);
+}
+
+.logout-btn:hover::after {
+  width: 100%;
+}
+
+/* Auth pages */
+.auth-main {
+  min-height: calc(100vh - 220px);
+  display: grid;
+  place-items: center;
+  padding: 3.5rem 0;
+  background: linear-gradient(
+    160deg,
+    rgba(52, 152, 219, 0.1),
+    rgba(44, 62, 80, 0.1)
+  );
+}
+
+.auth-card {
+  width: min(92%, 480px);
+  background: var(--background-white);
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(44, 62, 80, 0.16);
+  border: 1px solid rgba(44, 62, 80, 0.08);
+  padding: 2rem;
+}
+
+.auth-card h2 {
+  color: var(--secondary-color);
+  margin-bottom: 0.5rem;
+}
+
+.auth-subtitle {
+  color: #667281;
+  margin-bottom: 1.5rem;
+}
+
+.auth-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.auth-form label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-weight: 600;
+  color: var(--secondary-color);
+}
+
+.auth-form input {
+  width: 100%;
+  border: 1px solid #cfd8e3;
+  border-radius: var(--border-radius);
+  padding: 0.7rem 0.85rem;
+  font-size: 1rem;
+  color: var(--text-dark);
+  background: #fff;
+}
+
+.auth-form input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15);
+}
+
+.auth-submit {
+  margin-top: 0.5rem;
+  width: 100%;
+  border: none;
+  border-radius: 999px;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  background: var(--primary-color);
+  color: var(--text-light);
+  cursor: pointer;
+  transition: all var(--transition-speed);
+}
+
+.auth-submit:hover {
+  background: var(--secondary-color);
+  transform: translateY(-2px);
+}
+
+.auth-message {
+  min-height: 1.3rem;
+  font-size: 0.95rem;
+  margin-top: 0.4rem;
+}
+
+.auth-message.success {
+  color: #1f8f4b;
+}
+
+.auth-message.error {
+  color: var(--accent-color);
+}
+
+.auth-links {
+  margin-top: 1rem;
+  font-size: 0.95rem;
+  color: #5f6a76;
+}
+
+.auth-links a {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
 /* Hero Section */
 /* Uses a gradient background and animation */
 .hero {
