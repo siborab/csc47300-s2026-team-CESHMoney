@@ -128,6 +128,23 @@ function transactionSortValue(item) {
   return `${datePart}|${createdPart}`;
 }
 
+function getEffectiveExpenseAmount(item) {
+  const rawAmount = Number(item.amount || 0);
+  const splitInfo = item.splitBetween;
+
+  if (
+    rawAmount < 0 &&
+    splitInfo &&
+    typeof splitInfo === "object" &&
+    Number.isFinite(Number(splitInfo.eachAmount)) &&
+    Number(splitInfo.eachAmount) > 0
+  ) {
+    return -Math.abs(Number(splitInfo.eachAmount));
+  }
+
+  return rawAmount;
+}
+
 function renderBudgetProgress(db) {
   const progressListEl = document.getElementById("budgetProgressList");
   if (!progressListEl) {
@@ -138,8 +155,8 @@ function renderBudgetProgress(db) {
   const html = BUDGET_CATEGORY_ORDER.map((category) => {
     const budget = Number(db.categoryBudgets[category] || 0);
     const used = monthlyTransactions
-      .filter((item) => Number(item.amount) < 0 && item.category === category)
-      .reduce((sum, item) => sum + Math.abs(Number(item.amount)), 0);
+      .filter((item) => getEffectiveExpenseAmount(item) < 0 && item.category === category)
+      .reduce((sum, item) => sum + Math.abs(getEffectiveExpenseAmount(item)), 0);
 
     const usedPercent = budget > 0 ? Math.min(100, (used / budget) * 100) : 0;
     return `
@@ -159,8 +176,8 @@ function renderBudgetProgress(db) {
     0
   );
   const totalUsed = monthlyTransactions
-    .filter((item) => Number(item.amount) < 0)
-    .reduce((sum, item) => sum + Math.abs(Number(item.amount)), 0);
+    .filter((item) => getEffectiveExpenseAmount(item) < 0)
+    .reduce((sum, item) => sum + Math.abs(getEffectiveExpenseAmount(item)), 0);
 
   return Math.max(0, totalBudget - totalUsed);
 }
@@ -192,7 +209,7 @@ function renderDashboard(db) {
           <td>${formatShortDate(item.date)}</td>
           <td>${item.description}</td>
           <td>${categoryLabel(item.category)}</td>
-          <td>${formatTableAmount(item.amount)}</td>
+          <td>${formatTableAmount(getEffectiveExpenseAmount(item))}</td>
         </tr>
       `
     )
@@ -205,8 +222,8 @@ function renderDashboard(db) {
   const monthlyIncome = Number(db.monthlyIncome || 0);
 
   const monthlySpend = monthlyTransactions
-    .filter((item) => Number(item.amount) < 0)
-    .reduce((sum, item) => sum + Math.abs(Number(item.amount)), 0);
+    .filter((item) => getEffectiveExpenseAmount(item) < 0)
+    .reduce((sum, item) => sum + Math.abs(getEffectiveExpenseAmount(item)), 0);
   const budgetRemaining = renderBudgetProgress(db);
   const totalBalance = monthlyIncome - monthlySpend;
 
@@ -248,11 +265,11 @@ function initModalHandlers(dbRef) {
   const splitSection = document.getElementById("splitSection");
   const totalWithTipEl = document.getElementById("totalWithTipValue");
   const splitPreviewEl = document.getElementById("splitPreview");
-  const splitUserChecks = [...document.querySelectorAll(".split-user-check")];
+  const splitCountInput = document.getElementById("splitCount");
 
   if (
     !modal || !openBtn || !closeBtn || !cancelBtn || !form ||
-    !splitToggle || !splitSection || !totalWithTipEl || !splitPreviewEl
+    !splitToggle || !splitSection || !totalWithTipEl || !splitPreviewEl || !splitCountInput
   ) {
     return;
   }
@@ -270,15 +287,10 @@ function initModalHandlers(dbRef) {
     totalWithTipEl.textContent = formatCurrency(getTotalWithTip());
   };
 
-  const buildEqualSplit = (users, totalAmount) => {
+  const buildEqualSplit = (count, totalAmount) => {
     const totalCents = Math.round(totalAmount * 100);
-    const base = Math.floor(totalCents / users.length);
-    let remainder = totalCents - base * users.length;
-    return users.map((user) => {
-      const cents = base + (remainder > 0 ? 1 : 0);
-      remainder = Math.max(0, remainder - 1);
-      return { user, amount: cents / 100 };
-    });
+    const perPersonCents = Math.round(totalCents / count);
+    return perPersonCents / 100;
   };
 
   const refreshSplitPreview = () => {
@@ -286,23 +298,20 @@ function initModalHandlers(dbRef) {
       splitPreviewEl.textContent = "";
       return;
     }
-    const selectedUsers = splitUserChecks.filter((check) => check.checked).map((check) => check.value);
+    const splitCount = Number.parseInt(splitCountInput.value, 10);
     const totalAmount = getTotalWithTip();
-    if (selectedUsers.length === 0 || totalAmount <= 0) {
-      splitPreviewEl.textContent = "Select people to see auto split.";
+    if (!Number.isFinite(splitCount) || splitCount < 2 || totalAmount <= 0) {
+      splitPreviewEl.textContent = "Enter how many people to split with.";
       return;
     }
-    const splitDetails = buildEqualSplit(selectedUsers, totalAmount);
-    const preview = splitDetails.map((item) => `${item.user}: ${formatCurrency(item.amount)}`).join(" • ");
-    splitPreviewEl.textContent = `Auto split -> ${preview}`;
+    const eachAmount = buildEqualSplit(splitCount, totalAmount);
+    splitPreviewEl.textContent = `Auto split -> ${splitCount} people, each pays ${formatCurrency(eachAmount)}`;
   };
 
   const setSplitSectionState = () => {
     splitSection.classList.toggle("hidden", !splitToggle.checked);
     if (!splitToggle.checked) {
-      splitUserChecks.forEach((check) => {
-        check.checked = false;
-      });
+      splitCountInput.value = "2";
     }
     refreshSplitPreview();
   };
@@ -335,11 +344,8 @@ function initModalHandlers(dbRef) {
   form.baseAmount.addEventListener("input", refreshSplitPreview);
   form.tipPercent.addEventListener("input", refreshTotalWithTip);
   form.tipPercent.addEventListener("input", refreshSplitPreview);
+  splitCountInput.addEventListener("input", refreshSplitPreview);
   splitToggle.addEventListener("change", setSplitSectionState);
-
-  splitUserChecks.forEach((check) => {
-    check.addEventListener("change", refreshSplitPreview);
-  });
 
   form.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -361,30 +367,33 @@ function initModalHandlers(dbRef) {
     }
 
     let splitDetails = [];
+    let effectiveAmount = totalAmount;
 
     if (splitToggle.checked) {
-      const selectedUsers = splitUserChecks
-        .filter((check) => check.checked)
-        .map((check) => check.value);
-
-      if (selectedUsers.length === 0) {
-        setAddExpenseMessage("Please choose at least one person for split.", "error");
+      const splitCount = Number.parseInt(splitCountInput.value, 10);
+      if (!Number.isFinite(splitCount) || splitCount < 2) {
+        setAddExpenseMessage("Split count must be at least 2.", "error");
         return;
       }
-
-      splitDetails = buildEqualSplit(selectedUsers, totalAmount);
+      splitDetails = {
+        splitCount,
+        eachAmount: buildEqualSplit(splitCount, totalAmount)
+      };
+      effectiveAmount = splitDetails.eachAmount;
     }
 
+    const splitTag = splitToggle.checked ? ` (Split bill: ${splitDetails.splitCount} people)` : "";
     const description = note
-      ? `${expenseTypeToDescription(expenseType)} - ${note}`
-      : expenseTypeToDescription(expenseType);
+      ? `${expenseTypeToDescription(expenseType)}${splitTag} - ${note}`
+      : `${expenseTypeToDescription(expenseType)}${splitTag}`;
 
     dbRef.current.transactions.unshift({
       date: new Date().toISOString().slice(0, 10),
       createdAt: new Date().toISOString(),
       description,
       category: normalizeCategory(expenseType),
-      amount: -Math.abs(totalAmount),
+      amount: -Math.abs(effectiveAmount),
+      totalAmount: -Math.abs(totalAmount),
       type: "expense",
       baseAmount,
       tipPercent,

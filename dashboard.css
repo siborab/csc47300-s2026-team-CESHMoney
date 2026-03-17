@@ -227,9 +227,6 @@ tr:nth-child(even) td {
   .split-section {
     padding: 0.7rem;
   }
-  .split-user-list label {
-    font-size: 0.92rem;
-  }
 }
 
 /* Add Expense Modal */
@@ -309,11 +306,6 @@ tr:nth-child(even) td {
 }
 .hidden {
   display: none;
-}
-.split-user-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
 }
 .split-preview {
   margin: 0.4rem 0 0 0;

@@ -138,11 +138,15 @@
         <div id="splitSection" class="split-section hidden">
           <div class="form-group">
             <label>Split With (Auto-equal split)</label>
-            <div class="split-user-list">
-              <label><input type="checkbox" class="split-user-check" value="alice"> Alice</label>
-              <label><input type="checkbox" class="split-user-check" value="bob"> Bob</label>
-              <label><input type="checkbox" class="split-user-check" value="charlie"> Charlie</label>
-            </div>
+            <input
+              type="number"
+              id="splitCount"
+              name="splitCount"
+              min="2"
+              step="1"
+              value="2"
+              placeholder="How many people"
+            >
           </div>
           <p id="splitPreview" class="split-preview"></p>
         </div>
@@ -156,7 +160,7 @@
   </div>
 
   <script src="./auth.js"></script>
-  <script src="./dashboard.js?v=13"></script>
+  <script src="./dashboard.js?v=15"></script>
 
 </body>
 </html>
