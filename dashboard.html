@@ -39,7 +39,10 @@
 
     <div class="dashboard-header">
       <h1>Dashboard</h1>
-      <button type="button" class="btn-add-expense" id="openAddExpenseBtn">Add Expense</button>
+      <div>
+        <button type="button" class="btn-edit-categories" id="openEditCategoriesBtn">categories</button>
+        <button type="button" class="btn-add-expense" id="openAddExpenseBtn">Add Expense</button>
+      </div>
     </div>
 
     <div class="cards">
@@ -158,6 +161,22 @@
       </form>
     </div>
   </div>
+
+  <!-- Edit Category Modal -->
+  <div class="modal-overlay" id="editCategoryModel">
+    <div class="modal">
+      <button type="button" class="modal-close" id="closeEditCategoryBtn" aria-label="Close">&times;</button>
+      <h2>Edit Categories</h2>
+      <form id="editCategoriesForm">
+        <p id="addExpenseMessage" class="auth-message" aria-live="polite"></p>
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" id="cancelEditCaetegoryBtn">Cancel</button>
+          <button type="submit" class="btn-submit">Add Expense</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
 
   <script src="./auth.js"></script>
   <script src="./dashboard.js?v=15"></script>
