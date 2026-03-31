@@ -17,7 +17,17 @@
       <nav>
         <ul>
           <li><a href="dashboard.html">Dashboard</a></li>
-          <li><a href="index.html#features">Features</a></li>
+          <li class="login-menu">
+            <details>
+              <summary>Features</summary>
+              <ul class="login-dropdown">
+                <li><a href="budget-timeline.html">Budget Timeline</a></li>
+                <li><a href="currency-conversion.html">Currency Conversion</a></li>
+                <li><a href="export-center.html">Export Center</a></li>
+                <li><a href="subscription-notifications.html">Subscription Alerts</a></li>
+              </ul>
+            </details>
+          </li>
           <li><a href="index.html#about">About</a></li>
           <li class="login-menu">
             <details>
@@ -160,6 +170,7 @@
   </div>
 
   <script src="./auth.js"></script>
+  <script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
   <script src="./dashboard.js?v=15"></script>
 
 </body>
