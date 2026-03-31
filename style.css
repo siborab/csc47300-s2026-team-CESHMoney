@@ -1,3 +1,4 @@
+/* Global styles shared across the whole React app, including auth and home page layout. */
 :root {
   --primary-color: #3498db;
   --secondary-color: #2c3e50;

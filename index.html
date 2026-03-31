@@ -1,99 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SpendWise - Shared Expense Tracker</title>
-    <link rel="stylesheet" href="./style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpendWise</title>
 </head>
 <body>
-    <!-- Header Section -->
-    <header>
-        <div class="container">
-            <h1><a href="index.html">SpendWise</a></h1>
-            <nav>
-                <ul>
-                    <!-- Navigation links to different sections -->
-                    <li><a href="dashboard.html">Dashboard</a></li>
-                    <li class="login-menu">
-                        <details>
-                            <summary>Features</summary>
-                            <ul class="login-dropdown">
-                                <li><a href="budget-timeline.html">Budget Timeline</a></li>
-                                <li><a href="currency-conversion.html">Currency Conversion</a></li>
-                                <li><a href="export-center.html">Export Center</a></li>
-                                <li><a href="subscription-notifications.html">Subscription Alerts</a></li>
-                            </ul>
-                        </details>
-                    </li>
-                    <li><a href="#about">About</a></li>
-                    <li class="login-menu">
-                        <details>
-                            <summary>Login</summary>
-                            <ul class="login-dropdown">
-                                <li><a href="signin.html">Sign In</a></li>
-                                <li><a href="signup.html">Sign Up</a></li>
-                            </ul>
-                        </details>
-                    </li>
-                    <li><a href="#contact">Contact</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
-
-    <main>
-        <!-- Hero Section -->
-        <section class="hero">
-            <div class="container">
-                <h2>Manage Shared Finances Simply</h2>
-                <p>Track expenses, categorize spending, and split bills effortlessly.</p>
-                <!-- Button -->
-                <a href="dashboard.html" class="btn">Get Started</a>
-            </div>
-        </section>
-
-        <!-- Features Section -->
-        <section id="features" class="features">
-            <div class="container">
-                <h2>Key Features</h2>
-                <!-- Grid container for feature cards -->
-                <div class="feature-grid">
-                    <!-- Individual feature card -->
-                    <div class="feature-card">
-                        <h3>Expense Tracking</h3>
-                        <p>Input expenses and assign them to categories like rent, groceries, and bills.</p>
-                    </div>
-                    <!-- Individual feature card -->
-                    <div class="feature-card">
-                        <h3>Shared Dashboard</h3>
-                        <p>View summaries of total expenses and see who owes what in your group.</p>
-                    </div>
-                    <!-- Individual feature card -->
-                    <div class="feature-card">
-                        <h3>Budget Alerts</h3>
-                        <p>Set monthly limits and get notified when you're approaching your budget.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- About Section -->
-        <section id="about" class="about">
-            <div class="container">
-                <h2>About SpendWise</h2>
-                <p>SpendWise helps individuals and groups manage shared finances in a transparent way. </p>
-            </div>
-        </section>
-    </main>
-
-    <!-- Footer Section -->
-    <footer>
-        <div class="container">
-            <p>&copy; 2026 SpendWise. All rights reserved.</p>
-        </div>
-    </footer>
-    <script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
-    <script src="./auth.js"></script>
+  <!-- Vite mounts the React app into this root element. -->
+  <div id="root"></div>
+  <!-- Main entry point for the React application. -->
+  <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>
