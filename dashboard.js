@@ -3,75 +3,6 @@ const EXPENSES_DB_KEY = "spendwise_expenses_db_v1";
 const EXPENSES_DB_VERSION_KEY = "spendwise_expenses_db_version";
 const EXPENSES_DB_VERSION = "6";
 let debuglog = true;
-const BUDGET_CATEGORY_ORDER = [
-    "rent",
-    "groceries",
-    "utilities",
-    "food",
-    "transport",
-    "entertainment",
-    "other",
-];
-// function fetchCategoryAndBudget(): any[] {
-//   try {
-//     const raw = localStorage.getItem(EXPENSES_DB_KEY);
-//     if (!raw) {
-//       return [];
-//     }
-//     const parsed = JSON.parse(raw);
-//     if (!Array.isArray(parsed.transactions)) {
-//       return [];
-//     }
-//     const catbugobj = parsed.categoryBudget2
-//     if(debuglog === true){console.log("CAT BUG:", catbugobj)}
-//     return catbugobj
-//   } catch (error) {
-//     return [];
-//   }
-// }
-// function fetchCategories(): string[] {
-//   try {
-//     const raw = localStorage.getItem(EXPENSES_DB_KEY);
-//     if (!raw) {
-//       return [];
-//     }
-//     const parsed = JSON.parse(raw);
-//     if (!Array.isArray(parsed.transactions)) {
-//       return [];
-//     }
-//     const categoryList = parsed.categoryBudget2.map((item:any) => item.category);
-//     if(debuglog === true){console.log("categoryList from local db:", categoryList)}
-//     return categoryList
-//   } catch (error) {
-//     return [];
-//   }
-// }
-// function fetchBudgets(): number[] {
-//   try {
-//     const raw = localStorage.getItem(EXPENSES_DB_KEY);
-//     if (!raw) {
-//       return [];
-//     }
-//     const parsed = JSON.parse(raw);
-//     if (!Array.isArray(parsed.transactions)) {
-//       return [];
-//     }
-//     const budgeList = parsed.categoryBudget2.map((item:any) => item.budget);
-//     if(debuglog === true){console.log("categoryList from local db:", budgeList)}
-//     return budgeList
-//   } catch (error) {
-//     return [];
-//   }
-// } 
-const DEFAULT_CATEGORY_BUDGETS = {
-    rent: 1600,
-    groceries: 450,
-    utilities: 300,
-    food: 500,
-    transport: 250,
-    entertainment: 200,
-    other: 200,
-};
 function formatCurrency(amount) {
     return new Intl.NumberFormat("en-US", {
         style: "currency",
@@ -283,6 +214,8 @@ function initModalHandlers(dbRef) {
     const totalWithTipEl = document.getElementById("totalWithTipValue");
     const splitPreviewEl = document.getElementById("splitPreview");
     const splitCountInput = document.getElementById("splitCount");
+    const expenseCategoryList = document.getElementById("expenseCategoryList");
+    const expenseTypeSelect = document.getElementById("expenseType");
     if (!modal ||
         !openBtn ||
         !closeBtn ||
@@ -292,7 +225,8 @@ function initModalHandlers(dbRef) {
         !splitSection ||
         !totalWithTipEl ||
         !splitPreviewEl ||
-        !splitCountInput) {
+        !splitCountInput ||
+        !expenseTypeSelect) {
         return;
     }
     const getTotalWithTip = () => {
@@ -354,6 +288,16 @@ function initModalHandlers(dbRef) {
             closeModal();
         }
     });
+    function renderExpenseCategoryOptions(dbRef) {
+        const categories = dbRef.current.categoryBudget2 || [];
+        expenseTypeSelect.innerHTML = `
+    <option value="">Select type...</option>
+    ${categories
+            .map((item) => `<option value="${item.category}">${categoryLabel(item.category)}</option>`)
+            .join("")}
+  `;
+    }
+    renderExpenseCategoryOptions(dbRef);
     form.baseAmount.addEventListener("input", refreshTotalWithTip);
     form.baseAmount.addEventListener("input", refreshSplitPreview);
     form.tipPercent.addEventListener("input", refreshTotalWithTip);
@@ -399,7 +343,7 @@ function initModalHandlers(dbRef) {
             date: new Date().toISOString().slice(0, 10),
             createdAt: new Date().toISOString(),
             description,
-            category: normalizeCategory(expenseType, dbRef.current.transactions.categoryBudget2),
+            category: normalizeCategory(expenseType, dbRef.current.categoryBudget2),
             amount: -Math.abs(effectiveAmount),
             totalAmount: -Math.abs(totalAmount),
             type: "expense",
@@ -419,7 +363,9 @@ function initModalCategoryHandler(dbRef) {
     const openBtn = document.getElementById("openEditCategoriesBtn");
     const closeBtn = document.getElementById("closeEditCategoryBtn");
     const cancelBtn = document.getElementById("cancelEditCaetegoryBtn");
-    if (!modal || !openBtn || !closeBtn || !cancelBtn) {
+    const nameInput = document.getElementById("categoryNameInput");
+    const budgetInput = document.getElementById("categoryBudgetInput");
+    if (!modal || !openBtn || !closeBtn || !cancelBtn || !nameInput || !budgetInput) {
         return;
     }
     const closeModal = () => {

@@ -373,3 +373,9 @@ tr:nth-child(even) td {
 .modal {
   position: relative;
 }
+
+.categoryAdditionInput {
+  display: flex;
+}.categoryAdditionInput input {
+  margin: 5px;
+}

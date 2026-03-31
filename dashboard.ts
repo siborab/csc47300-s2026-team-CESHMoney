@@ -4,83 +4,11 @@ const EXPENSES_DB_VERSION = "6";
 
 
 let debuglog : boolean = true 
-
-
 type categoryBudget = {
   category : string, 
   budget : number 
 }
-const BUDGET_CATEGORY_ORDER = [
-  "rent",
-  "groceries",
-  "utilities",
-  "food",
-  "transport",
-  "entertainment",
-  "other",
-];
 
-// function fetchCategoryAndBudget(): any[] {
-//   try {
-//     const raw = localStorage.getItem(EXPENSES_DB_KEY);
-//     if (!raw) {
-//       return [];
-//     }
-//     const parsed = JSON.parse(raw);
-//     if (!Array.isArray(parsed.transactions)) {
-//       return [];
-//     }
-//     const catbugobj = parsed.categoryBudget2
-//     if(debuglog === true){console.log("CAT BUG:", catbugobj)}
-//     return catbugobj
-//   } catch (error) {
-//     return [];
-//   }
-// }
-// function fetchCategories(): string[] {
-//   try {
-//     const raw = localStorage.getItem(EXPENSES_DB_KEY);
-//     if (!raw) {
-//       return [];
-//     }
-//     const parsed = JSON.parse(raw);
-//     if (!Array.isArray(parsed.transactions)) {
-//       return [];
-//     }
-//     const categoryList = parsed.categoryBudget2.map((item:any) => item.category);
-//     if(debuglog === true){console.log("categoryList from local db:", categoryList)}
-//     return categoryList
-//   } catch (error) {
-//     return [];
-//   }
-// }
-// function fetchBudgets(): number[] {
-//   try {
-//     const raw = localStorage.getItem(EXPENSES_DB_KEY);
-//     if (!raw) {
-//       return [];
-//     }
-//     const parsed = JSON.parse(raw);
-//     if (!Array.isArray(parsed.transactions)) {
-//       return [];
-//     }
-//     const budgeList = parsed.categoryBudget2.map((item:any) => item.budget);
-//     if(debuglog === true){console.log("categoryList from local db:", budgeList)}
-//     return budgeList
-//   } catch (error) {
-//     return [];
-//   }
-// } 
-
-const DEFAULT_CATEGORY_BUDGETS = {
-  rent: 1600,
-  groceries: 450,
-  utilities: 300,
-  food: 500,
-  transport: 250,
-  entertainment: 200,
-  other: 200,
-};
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -336,6 +264,8 @@ function initModalHandlers(dbRef: any): void {
   const totalWithTipEl = document.getElementById("totalWithTipValue");
   const splitPreviewEl = document.getElementById("splitPreview");
   const splitCountInput = document.getElementById("splitCount") as any;
+  const expenseCategoryList = document.getElementById("expenseCategoryList");
+  const expenseTypeSelect = document.getElementById("expenseType") as HTMLSelectElement;
 
   if (
     !modal ||
@@ -347,7 +277,8 @@ function initModalHandlers(dbRef: any): void {
     !splitSection ||
     !totalWithTipEl ||
     !splitPreviewEl ||
-    !splitCountInput
+    !splitCountInput || 
+    !expenseTypeSelect
   ) {
     return;
   }
@@ -421,6 +352,19 @@ function initModalHandlers(dbRef: any): void {
     }
   });
 
+  function renderExpenseCategoryOptions(dbRef: any): void {
+  const categories = dbRef.current.categoryBudget2 || [];
+  expenseTypeSelect.innerHTML = `
+    <option value="">Select type...</option>
+    ${categories
+      .map((item: categoryBudget) =>
+        `<option value="${item.category}">${categoryLabel(item.category)}</option>`
+      )
+      .join("")}
+  `;
+  }
+  renderExpenseCategoryOptions(dbRef);
+
   form.baseAmount.addEventListener("input", refreshTotalWithTip);
   form.baseAmount.addEventListener("input", refreshSplitPreview);
   form.tipPercent.addEventListener("input", refreshTotalWithTip);
@@ -475,7 +419,7 @@ function initModalHandlers(dbRef: any): void {
       date: new Date().toISOString().slice(0, 10),
       createdAt: new Date().toISOString(),
       description,
-      category: normalizeCategory(expenseType, dbRef.current.transactions.categoryBudget2),
+      category: normalizeCategory(expenseType, dbRef.current.categoryBudget2),
       amount: -Math.abs(effectiveAmount),
       totalAmount: -Math.abs(totalAmount),
       type: "expense",
@@ -498,8 +442,10 @@ function initModalCategoryHandler(dbRef:any): void {
   const openBtn = document.getElementById("openEditCategoriesBtn");
   const closeBtn = document.getElementById("closeEditCategoryBtn");
   const cancelBtn = document.getElementById("cancelEditCaetegoryBtn");
+  const nameInput = document.getElementById("categoryNameInput");
+  const budgetInput = document.getElementById("categoryBudgetInput");
 
-  if (!modal || !openBtn || !closeBtn || !cancelBtn) {
+  if (!modal || !openBtn || !closeBtn || !cancelBtn || !nameInput || !budgetInput) {
     return;
   }
 
@@ -519,6 +465,16 @@ function initModalCategoryHandler(dbRef:any): void {
       closeModal();
     }
   });
+
+
+
+
+
+
+
+
+
+
 }
 
 

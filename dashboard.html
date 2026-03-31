@@ -109,14 +109,6 @@
         <div class="form-group">
           <label for="expenseType">Expense Type</label>
           <select id="expenseType" name="expenseType" required>
-            <option value="">Select type...</option>
-            <option value="rent">Rent</option>
-            <option value="groceries">Groceries</option>
-            <option value="utilities">Utilities</option>
-            <option value="food">Food</option>
-            <option value="transport">Transport</option>
-            <option value="entertainment">Entertainment</option>
-            <option value="other">Other</option>
           </select>
         </div>
         <div class="form-group">
@@ -170,15 +162,18 @@
       <button type="button" class="modal-close" id="closeEditCategoryBtn" aria-label="Close">&times;</button>
       <h2>Edit Categories</h2>
       <form id="editCategoriesForm">
+        <div id="categoryBudgetList"></div>
         <p id="addExpenseMessage" class="auth-message" aria-live="polite"></p>
-        
         <div class="form-group">
           <label for="expenseNote">Add a Category</label>
-          <input type="text" id="expenseNote" name="expenseNote" maxlength="120" placeholder="Add a Category">
+          <div class="categoryAdditionInput">
+            <input type="text" id="categoryNameInput" name="categoryName" maxlength="50" placeholder="Add a Category">
+            <input type="number" id="categoryBudgetInput" name="categoryBudget" maxlength="15" placeholder="0.00">
+          </div>
         </div>
         <div class="modal-actions">
           <button type="button" class="btn-cancel" id="cancelEditCaetegoryBtn">Cancel</button>
-          <button type="submit" class="btn-submit">Add Expense</button>
+          <button type="submit" class="btn-submit">Make Changes</button>
         </div>
       </form>
     </div>
