@@ -191,6 +191,14 @@ function setAddExpenseMessage(text, type) {
     messageEl.textContent = text;
     messageEl.className = `auth-message ${type}`;
 }
+function setAddCategoryMessage(text, type) {
+    const messageEl = document.getElementById("AddCategoryMessage");
+    if (!messageEl) {
+        return;
+    }
+    messageEl.textContent = text;
+    messageEl.className = `auth-message ${type}`;
+}
 function expenseTypeToDescription(type) {
     const labels = {
         rent: "Rent",
@@ -202,6 +210,18 @@ function expenseTypeToDescription(type) {
         other: "Other",
     };
     return labels[type] || "Expense";
+}
+function renderExpenseCategoryOptions(dbRef) {
+    const expenseTypeSelect = document.getElementById("expenseType");
+    if (!expenseTypeSelect)
+        return;
+    const categories = dbRef.current.categoryBudget2 || [];
+    expenseTypeSelect.innerHTML = `
+      <option value="">Select type...</option>
+      ${categories
+        .map((item) => `<option value="${item.category}">${categoryLabel(item.category)}</option>`)
+        .join("")}
+    `;
 }
 function initModalHandlers(dbRef) {
     const modal = document.getElementById("addExpenseModal");
@@ -288,16 +308,6 @@ function initModalHandlers(dbRef) {
             closeModal();
         }
     });
-    function renderExpenseCategoryOptions(dbRef) {
-        const categories = dbRef.current.categoryBudget2 || [];
-        expenseTypeSelect.innerHTML = `
-    <option value="">Select type...</option>
-    ${categories
-            .map((item) => `<option value="${item.category}">${categoryLabel(item.category)}</option>`)
-            .join("")}
-  `;
-    }
-    renderExpenseCategoryOptions(dbRef);
     form.baseAmount.addEventListener("input", refreshTotalWithTip);
     form.baseAmount.addEventListener("input", refreshSplitPreview);
     form.tipPercent.addEventListener("input", refreshTotalWithTip);
@@ -365,7 +375,8 @@ function initModalCategoryHandler(dbRef) {
     const cancelBtn = document.getElementById("cancelEditCaetegoryBtn");
     const nameInput = document.getElementById("categoryNameInput");
     const budgetInput = document.getElementById("categoryBudgetInput");
-    if (!modal || !openBtn || !closeBtn || !cancelBtn || !nameInput || !budgetInput) {
+    const form = document.getElementById("editCategoriesForm");
+    if (!modal || !openBtn || !closeBtn || !cancelBtn || !nameInput || !budgetInput || !form) {
         return;
     }
     const closeModal = () => {
@@ -380,6 +391,31 @@ function initModalCategoryHandler(dbRef) {
         if (event.target === modal) {
             closeModal();
         }
+    });
+    form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        if (debuglog == true) {
+            console.log("Category Submitted!");
+        }
+        const name = form.categoryName.value;
+        const budget = Number(form.categoryBudget.value);
+        if (!name || !budget) {
+            setAddExpenseMessage("Please fill all fields with a valid amount.", "error");
+            return;
+        }
+        if (!Number.isFinite(budget)) {
+            setAddExpenseMessage("Budget is invalid.", "error");
+            return;
+        }
+        dbRef.current.categoryBudget2.unshift({
+            category: name,
+            budget: budget,
+        });
+        writeLocalDb(dbRef.current);
+        renderDashboard(dbRef.current);
+        renderExpenseCategoryOptions(dbRef);
+        setAddCategoryMessage("Category added successfully.", "success");
+        setTimeout(closeModal, 500);
     });
 }
 (async function initDashboard() {

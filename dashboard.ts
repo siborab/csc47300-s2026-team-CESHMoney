@@ -239,6 +239,14 @@ function setAddExpenseMessage(text: string, type: string): void {
   messageEl.textContent = text;
   messageEl.className = `auth-message ${type}`;
 }
+function setAddCategoryMessage(text: string, type: string): void {
+  const messageEl = document.getElementById("AddCategoryMessage");
+  if (!messageEl) {
+    return;
+  }
+  messageEl.textContent = text;
+  messageEl.className = `auth-message ${type}`;
+}
 
 function expenseTypeToDescription(type: any): string {
   const labels: Record<string, string> = {
@@ -252,6 +260,23 @@ function expenseTypeToDescription(type: any): string {
   };
   return labels[type] || "Expense";
 }
+
+function renderExpenseCategoryOptions(dbRef: any): void {
+  const expenseTypeSelect = document.getElementById("expenseType") as HTMLSelectElement | null;
+  if (!expenseTypeSelect) return;
+  
+  const categories = dbRef.current.categoryBudget2 || [];
+    expenseTypeSelect.innerHTML = `
+      <option value="">Select type...</option>
+      ${categories
+        .map((item: categoryBudget) =>
+          `<option value="${item.category}">${categoryLabel(item.category)}</option>`
+        )
+        .join("")}
+    `;
+}
+
+
 
 function initModalHandlers(dbRef: any): void {
   const modal = document.getElementById("addExpenseModal");
@@ -329,7 +354,7 @@ function initModalHandlers(dbRef: any): void {
     form.reset();
     setAddExpenseMessage("", "");
     refreshTotalWithTip();
-    setSplitSectionState();
+    setSplitSectionState(); 
   };
 
   const closeModal = (): void => {
@@ -352,18 +377,6 @@ function initModalHandlers(dbRef: any): void {
     }
   });
 
-  function renderExpenseCategoryOptions(dbRef: any): void {
-  const categories = dbRef.current.categoryBudget2 || [];
-  expenseTypeSelect.innerHTML = `
-    <option value="">Select type...</option>
-    ${categories
-      .map((item: categoryBudget) =>
-        `<option value="${item.category}">${categoryLabel(item.category)}</option>`
-      )
-      .join("")}
-  `;
-  }
-  renderExpenseCategoryOptions(dbRef);
 
   form.baseAmount.addEventListener("input", refreshTotalWithTip);
   form.baseAmount.addEventListener("input", refreshSplitPreview);
@@ -444,8 +457,9 @@ function initModalCategoryHandler(dbRef:any): void {
   const cancelBtn = document.getElementById("cancelEditCaetegoryBtn");
   const nameInput = document.getElementById("categoryNameInput");
   const budgetInput = document.getElementById("categoryBudgetInput");
+  const form = document.getElementById("editCategoriesForm") as any;
 
-  if (!modal || !openBtn || !closeBtn || !cancelBtn || !nameInput || !budgetInput) {
+  if (!modal || !openBtn || !closeBtn || !cancelBtn || !nameInput || !budgetInput || !form) {
     return;
   }
 
@@ -466,8 +480,34 @@ function initModalCategoryHandler(dbRef:any): void {
     }
   });
 
+  
+  form.addEventListener("submit", (event: Event): void => {
+    event.preventDefault();
+    if(debuglog == true) {console.log("Category Submitted!")}
 
+    const name = form.categoryName.value;
+    const budget = Number(form.categoryBudget.value); 
 
+    if (!name || !budget ) {
+      setAddExpenseMessage("Please fill all fields with a valid amount.", "error");
+      return;
+    }
+
+    if (!Number.isFinite(budget)) {
+      setAddExpenseMessage("Budget is invalid.", "error");
+      return;
+    }
+
+    dbRef.current.categoryBudget2.unshift({
+      category: name,
+      budget: budget,
+    });
+    writeLocalDb(dbRef.current);
+    renderDashboard(dbRef.current);
+    renderExpenseCategoryOptions(dbRef);
+    setAddCategoryMessage("Category added successfully.", "success");
+    setTimeout(closeModal, 500);
+  });
 
 
 
