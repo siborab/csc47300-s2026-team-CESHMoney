@@ -199,6 +199,41 @@ function setAddCategoryMessage(text, type) {
     messageEl.textContent = text;
     messageEl.className = `auth-message ${type}`;
 }
+function setCategoryList(dbRef) {
+    const categoryList = document.getElementById("categoryBudgetListEdit");
+    if (!categoryList)
+        return;
+    const categories = dbRef.current.categoryBudget2 || [];
+    categoryList.innerHTML = categories
+        .map(// <input class = "form-group" value="${item.budget}"> later
+    (item) => `
+        <div class="categoryAdditionInput category-item">
+          <h4>${item.category}</h4>
+          
+          <div>
+          
+          <button type="button" data-category="${item.category}" class="delete-btn">
+            Delete
+          </button></div>
+        </div>
+      `)
+        .join("");
+    // attach delete handlers
+    const buttons = categoryList.querySelectorAll(".delete-btn");
+    buttons.forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+            const category = e.currentTarget.dataset.category;
+            if (!category)
+                return;
+            dbRef.current.categoryBudget2 =
+                dbRef.current.categoryBudget2.filter((item) => item.category !== category);
+            writeLocalDb(dbRef.current);
+            renderDashboard(dbRef.current);
+            setCategoryList(dbRef);
+            renderExpenseCategoryOptions(dbRef);
+        });
+    });
+}
 function expenseTypeToDescription(type) {
     const labels = {
         rent: "Rent",
@@ -380,9 +415,11 @@ function initModalCategoryHandler(dbRef) {
         return;
     }
     const closeModal = () => {
+        resetModalForm();
         modal.classList.remove("active");
     };
     openBtn.addEventListener("click", () => {
+        setCategoryList(dbRef);
         modal.classList.add("active");
     });
     closeBtn.addEventListener("click", closeModal);
@@ -392,6 +429,10 @@ function initModalCategoryHandler(dbRef) {
             closeModal();
         }
     });
+    const resetModalForm = () => {
+        form.reset();
+        setAddCategoryMessage("", "");
+    };
     form.addEventListener("submit", (event) => {
         event.preventDefault();
         if (debuglog == true) {
@@ -414,6 +455,7 @@ function initModalCategoryHandler(dbRef) {
         writeLocalDb(dbRef.current);
         renderDashboard(dbRef.current);
         renderExpenseCategoryOptions(dbRef);
+        setCategoryList(dbRef);
         setAddCategoryMessage("Category added successfully.", "success");
         setTimeout(closeModal, 500);
     });

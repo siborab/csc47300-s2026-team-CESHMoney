@@ -376,6 +376,15 @@ tr:nth-child(even) td {
 
 .categoryAdditionInput {
   display: flex;
+  justify-content: space-between;
 }.categoryAdditionInput input {
   margin: 5px;
+}
+.delete-btn {
+    padding: 0.25rem 0.5rem;
+    margin: 2px; 
+    border-radius: 4px;
+    color:#ecf0f1;
+    border-color: #ecf0f100;
+    background: rgba(52, 152, 219, 1);
 }
