@@ -15,7 +15,17 @@
                 <ul>
                     <!-- Navigation links to different sections -->
                     <li><a href="dashboard.html">Dashboard</a></li>
-                    <li><a href="#features">Features</a></li>
+                    <li class="login-menu">
+                        <details>
+                            <summary>Features</summary>
+                            <ul class="login-dropdown">
+                                <li><a href="budget-timeline.html">Budget Timeline</a></li>
+                                <li><a href="currency-conversion.html">Currency Conversion</a></li>
+                                <li><a href="export-center.html">Export Center</a></li>
+                                <li><a href="subscription-notifications.html">Subscription Alerts</a></li>
+                            </ul>
+                        </details>
+                    </li>
                     <li><a href="#about">About</a></li>
                     <li class="login-menu">
                         <details>
@@ -83,6 +93,7 @@
             <p>&copy; 2026 SpendWise. All rights reserved.</p>
         </div>
     </footer>
+    <script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
     <script src="./auth.js"></script>
 </body>
 </html>
