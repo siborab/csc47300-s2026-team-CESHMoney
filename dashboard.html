@@ -141,6 +141,15 @@
         <div id="splitSection" class="split-section hidden">
           <div class="form-group">
             <label>Split With (Auto-equal split)</label>
+            <input
+              type="number"
+              id="splitCount"
+              name="splitCount"
+              min="2"
+              step="1"
+              value="2"
+              placeholder="How many people"
+            >
           </div>
           <p id="splitPreview" class="split-preview"></p>
         </div>
@@ -164,7 +173,7 @@
         <p id="addExpenseMessage" class="auth-message" aria-live="polite"></p>
         
         <div class="form-group">
-          <label for="expenseNote">Note (Optional)</label>
+          <label for="expenseNote">Add a Category</label>
           <input type="text" id="expenseNote" name="expenseNote" maxlength="120" placeholder="Add a Category">
         </div>
         <div class="modal-actions">
@@ -177,8 +186,8 @@
 
 
   <script src="./auth.js"></script>
-  <script src="./dashboard.js?v=15"></script>
   <script src="./categories.js"></script>
+  <script src="./dashboard.js?v=15"></script>
 
 </body>
 </html>
