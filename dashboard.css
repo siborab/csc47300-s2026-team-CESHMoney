@@ -1,3 +1,4 @@
+/* Dashboard-only styles for the summary cards, budget progress, transactions, and add-expense modal. */
 /* Ensure header/navbar matches homepage - load style.css rules with higher specificity */
 body header {
   background-color: #2c3e50;

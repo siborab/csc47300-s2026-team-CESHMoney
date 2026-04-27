@@ -1,0 +1,235 @@
+/* Currency-converter-specific layout and action styles. */
+.conversion-shell {
+  width: 90%;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 48px 0 64px;
+}
+
+.conversion-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  padding: 28px;
+}
+
+.conversion-card h1 {
+  margin: 0;
+  color: #2c3e50;
+}
+
+.conversion-subtitle {
+  margin-top: 8px;
+  margin-bottom: 22px;
+  color: #5f6b79;
+}
+
+.conversion-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.conversion-fields .field {
+  display: grid;
+  gap: 8px;
+}
+
+.conversion-fields label {
+  color: #2c3e50;
+  font-weight: 700;
+}
+
+.conversion-fields input,
+.conversion-fields select {
+  width: 100%;
+  height: 46px;
+  border: 1px solid #d4d9df;
+  border-radius: 10px;
+  padding: 0 12px;
+  font: inherit;
+  background: #fff;
+}
+
+.swap-currency-btn {
+  align-self: end;
+  height: 46px;
+  border: 1px solid #b8c3cf;
+  border-radius: 10px;
+  background: #f6f9fc;
+  color: #2c3e50;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.swap-currency-btn:hover {
+  background: #eef3f8;
+}
+
+.conversion-result {
+  margin-top: 24px;
+  padding: 18px;
+  border-radius: 12px;
+  background: #f8fbff;
+  border: 1px solid #d9e7f7;
+}
+
+.result-label {
+  margin: 0;
+  color: #5f6b79;
+  font-size: 0.9rem;
+}
+
+.result-value {
+  margin: 6px 0;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #1f5f94;
+}
+
+.result-meta {
+  margin: 0;
+  color: #475466;
+}
+
+.result-actions {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.action-btn {
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid #aac7e6;
+  background: #eaf4ff;
+  color: #1f5f94;
+  font-weight: 700;
+  padding: 0 12px;
+  cursor: pointer;
+}
+
+.action-btn:hover {
+  background: #ddecff;
+}
+
+.action-btn.secondary {
+  border-color: #b8c3cf;
+  background: #f6f9fc;
+  color: #2c3e50;
+}
+
+.action-btn.secondary:hover {
+  background: #eef3f8;
+}
+
+.action-btn.subtle {
+  margin-top: 10px;
+  border-color: #d8dde4;
+  background: #ffffff;
+  color: #5f6b79;
+}
+
+.feature-row {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.mini-panel {
+  border: 1px solid #e3e7ec;
+  border-radius: 10px;
+  padding: 14px;
+  background: #ffffff;
+}
+
+.mini-panel h2 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  color: #2c3e50;
+}
+
+.panel-meta {
+  margin: 0;
+  color: #4d5a6c;
+}
+
+.toggle-row {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #2c3e50;
+}
+
+.favorites-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 32px;
+}
+
+.favorite-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f3f8ff;
+  border: 1px solid #cdddef;
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+
+.favorite-chip button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #1f5f94;
+  font-weight: 700;
+  padding: 0;
+}
+
+.favorite-chip .remove-favorite {
+  color: #8a97a8;
+}
+
+.placeholder-section {
+  max-width: 520px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.placeholder-section h1 {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.placeholder-section p {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+@media (max-width: 700px) {
+  .conversion-shell {
+    width: 92%;
+    padding-top: 26px;
+  }
+
+  .conversion-card {
+    padding: 18px;
+  }
+
+  .conversion-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .feature-row {
+    grid-template-columns: 1fr;
+  }
+
+  .result-value {
+    font-size: 1.6rem;
+  }
+}
