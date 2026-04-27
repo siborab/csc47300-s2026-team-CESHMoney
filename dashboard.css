@@ -83,6 +83,21 @@ main.dashboard-main {
   background: #2980b9;
 }
 
+.btn-edit-categories {
+  background: #2c3e50;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.25rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.2s;
+}
+.btn-edit-categories:hover {
+  background: #1b2b36;
+}
+
 .cards {
   /* Advanced CSS : CSS Grid (required) + responsive layout */
   display: grid;
@@ -358,4 +373,19 @@ tr:nth-child(even) td {
 }
 .modal {
   position: relative;
+}
+
+.categoryAdditionInput {
+  display: flex;
+  justify-content: space-between;
+}.categoryAdditionInput input {
+  margin: 5px;
+}
+.delete-btn {
+    padding: 0.25rem 0.5rem;
+    margin: 2px; 
+    border-radius: 4px;
+    color:#ecf0f1;
+    border-color: #ecf0f100;
+    background: rgba(52, 152, 219, 1);
 }

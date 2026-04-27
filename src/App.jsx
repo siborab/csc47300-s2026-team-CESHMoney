@@ -11,26 +11,18 @@ const HOME_CURRENCY_KEY = "spendwise_home_currency";
 const LOCKED_RATE_KEY = "spendwise_locked_rate_snapshot";
 const FAVORITE_PAIRS_KEY = "spendwise_favorite_currency_pairs";
 
-// Categories used by the dashboard budget summary.
-const BUDGET_CATEGORY_ORDER = [
-  "rent",
-  "groceries",
-  "utilities",
-  "food",
-  "transport",
-  "entertainment",
-  "other"
+// Default categories used by the dashboard budget summary.
+// Categories are stored as an array of { category, budget } so the user can add
+// or remove categories at runtime via the "Edit Categories" modal.
+const DEFAULT_CATEGORY_BUDGET_LIST = [
+  { category: "rent", budget: 1600 },
+  { category: "groceries", budget: 450 },
+  { category: "utilities", budget: 300 },
+  { category: "food", budget: 500 },
+  { category: "transport", budget: 250 },
+  { category: "entertainment", budget: 200 },
+  { category: "other", budget: 200 }
 ];
-
-const DEFAULT_CATEGORY_BUDGETS = {
-  rent: 1600,
-  groceries: 450,
-  utilities: 300,
-  food: 500,
-  transport: 250,
-  entertainment: 200,
-  other: 200
-};
 
 // Demo exchange rates used by the converter feature.
 const RATE_TO_USD = {
@@ -118,18 +110,25 @@ function isInCurrentMonth(isoDate) {
   );
 }
 
-// Maps raw values into the supported category list.
-function normalizeCategory(rawCategory) {
+// Maps raw values into one of the user's configured budget categories.
+// Falls back to "other" when the raw value does not match a known category.
+function normalizeCategory(rawCategory, categoryBudgetList) {
   const category = String(rawCategory || "").trim().toLowerCase();
   if (category === "housing") {
     return "rent";
   }
-  return BUDGET_CATEGORY_ORDER.includes(category) ? category : "other";
+  if (category === "income") {
+    return "income";
+  }
+  const list = Array.isArray(categoryBudgetList) ? categoryBudgetList : [];
+  const known = list.some((item) => String(item.category).toLowerCase() === category);
+  return known ? category : "other";
 }
 
 // Labels displayed in the UI for each category.
+// Custom categories are title-cased automatically.
 function categoryLabel(category) {
-  const labels = {
+  const builtInLabels = {
     rent: "Rent",
     groceries: "Groceries",
     utilities: "Utilities",
@@ -140,7 +139,15 @@ function categoryLabel(category) {
     housing: "Housing",
     income: "Income"
   };
-  return labels[category] || "Other";
+  if (builtInLabels[category]) {
+    return builtInLabels[category];
+  }
+  return String(category || "")
+    .toLowerCase()
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ") || "Other";
 }
 
 // Builds a sortable value so recent transactions show first.
@@ -168,23 +175,45 @@ function getEffectiveExpenseAmount(item) {
   return rawAmount;
 }
 
+// Builds a categoryBudget2 array from any supported saved-data shape.
+// Prefers an explicit `categoryBudget2` array, falls back to a legacy
+// `categoryBudgets` object, then to the default list.
+function buildCategoryBudgetList(db) {
+  if (Array.isArray(db && db.categoryBudget2) && db.categoryBudget2.length > 0) {
+    return db.categoryBudget2.map((item) => ({
+      category: String(item.category || "").trim().toLowerCase() || "other",
+      budget: Number(item.budget || 0)
+    }));
+  }
+
+  if (db && db.categoryBudgets && typeof db.categoryBudgets === "object") {
+    const entries = Object.entries(db.categoryBudgets);
+    if (entries.length > 0) {
+      return entries.map(([category, budget]) => ({
+        category: String(category).trim().toLowerCase(),
+        budget: Number(budget || 0)
+      }));
+    }
+  }
+
+  return DEFAULT_CATEGORY_BUDGET_LIST.map((item) => ({ ...item }));
+}
+
 function normalizeDbShape(db) {
   // Normalizes seeded or saved data into the shape the dashboard expects.
-  const normalizedTransactions = Array.isArray(db.transactions)
+  const categoryBudget2 = buildCategoryBudgetList(db);
+  const normalizedTransactions = Array.isArray(db && db.transactions)
     ? db.transactions.map((item) => ({
         ...item,
-        category: normalizeCategory(item.category),
+        category: normalizeCategory(item.category, categoryBudget2),
         createdAt: item.createdAt || `${item.date}T00:00:00`
       }))
     : [];
 
   return {
-    monthlyIncome: Number(db.monthlyIncome || 0),
-    categoryBudgets: {
-      ...DEFAULT_CATEGORY_BUDGETS,
-      ...(db.categoryBudgets || {})
-    },
-    startingBalance: Number(db.startingBalance || 0),
+    monthlyIncome: Number((db && db.monthlyIncome) || 0),
+    categoryBudget2,
+    startingBalance: Number((db && db.startingBalance) || 0),
     transactions: normalizedTransactions
   };
 }
@@ -213,7 +242,7 @@ function convertAmount(amount, fromCurrency, toCurrency) {
 
 // Labels for expense types in the add-expense modal.
 function expenseTypeToDescription(type) {
-  const labels = {
+  const builtIn = {
     rent: "Rent",
     groceries: "Groceries",
     utilities: "Utilities",
@@ -222,7 +251,7 @@ function expenseTypeToDescription(type) {
     entertainment: "Entertainment",
     other: "Other"
   };
-  return labels[type] || "Expense";
+  return builtIn[type] || categoryLabel(type) || "Expense";
 }
 
 function buildEqualSplit(count, totalAmount) {
@@ -476,6 +505,11 @@ function DashboardPage() {
     isSplitExpense: false,
     splitCount: "2"
   });
+  // State for the "Edit Categories" modal that lets the user add/remove budget categories.
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [categoryForm, setCategoryForm] = useState({ categoryName: "", categoryBudget: "" });
+  const [categoryMessage, setCategoryMessage] = useState("");
+  const [categoryMessageType, setCategoryMessageType] = useState("");
 
   useEffect(() => {
     async function loadDb() {
@@ -497,7 +531,7 @@ function DashboardPage() {
       } catch (error) {
         setDb(normalizeDbShape({
           monthlyIncome: 0,
-          categoryBudgets: DEFAULT_CATEGORY_BUDGETS,
+          categoryBudget2: DEFAULT_CATEGORY_BUDGET_LIST.map((item) => ({ ...item })),
           startingBalance: 0,
           transactions: []
         }));
@@ -607,7 +641,7 @@ function DashboardPage() {
           date: new Date().toISOString().slice(0, 10),
           createdAt: new Date().toISOString(),
           description,
-          category: normalizeCategory(expenseType),
+          category: normalizeCategory(expenseType, db.categoryBudget2),
           amount: -Math.abs(effectiveAmount),
           totalAmount: -Math.abs(totalAmount),
           type: "expense",
@@ -627,6 +661,69 @@ function DashboardPage() {
     setTimeout(() => {
       closeModal();
     }, 500);
+  }
+
+  function closeCategoryModal() {
+    setShowCategoryModal(false);
+    setCategoryForm({ categoryName: "", categoryBudget: "" });
+    setCategoryMessage("");
+    setCategoryMessageType("");
+  }
+
+  function handleCategoryFormChange(event) {
+    const { name, value } = event.target;
+    setCategoryForm((current) => ({ ...current, [name]: value }));
+  }
+
+  function handleDeleteCategory(categoryName) {
+    if (!db) {
+      return;
+    }
+    const nextList = db.categoryBudget2.filter(
+      (item) => item.category !== categoryName
+    );
+    const nextDb = { ...db, categoryBudget2: nextList };
+    writeLocalDb(nextDb);
+    setDb(nextDb);
+    // Clear the expense-type selection if it referenced the deleted category.
+    if (formData.expenseType === categoryName) {
+      setFormData((current) => ({ ...current, expenseType: "" }));
+    }
+  }
+
+  function handleAddCategory(event) {
+    event.preventDefault();
+    if (!db) {
+      return;
+    }
+
+    const rawName = String(categoryForm.categoryName || "").trim();
+    const name = rawName.toLowerCase();
+    const budget = Number(categoryForm.categoryBudget);
+
+    if (!rawName || !Number.isFinite(budget) || budget <= 0) {
+      setCategoryMessage("Please fill all fields with a valid amount.");
+      setCategoryMessageType("error");
+      return;
+    }
+
+    if (db.categoryBudget2.some((item) => item.category === name)) {
+      setCategoryMessage("Category already exists.");
+      setCategoryMessageType("error");
+      return;
+    }
+
+    const nextDb = {
+      ...db,
+      // Newest categories appear first to match the prior dashboard.js behavior.
+      categoryBudget2: [{ category: name, budget }, ...db.categoryBudget2]
+    };
+    writeLocalDb(nextDb);
+    setDb(nextDb);
+    setCategoryForm({ categoryName: "", categoryBudget: "" });
+    setCategoryMessage("Category added successfully.");
+    setCategoryMessageType("success");
+    setTimeout(closeCategoryModal, 500);
   }
 
   if (!db) {
@@ -649,8 +746,9 @@ function DashboardPage() {
     .filter((item) => getEffectiveExpenseAmount(item) < 0)
     .reduce((sum, item) => sum + Math.abs(getEffectiveExpenseAmount(item)), 0);
 
-  const totalBudget = BUDGET_CATEGORY_ORDER.reduce(
-    (sum, category) => sum + Number(db.categoryBudgets[category] || 0),
+  const categoryBudgetList = Array.isArray(db.categoryBudget2) ? db.categoryBudget2 : [];
+  const totalBudget = categoryBudgetList.reduce(
+    (sum, item) => sum + Number(item.budget || 0),
     0
   );
 
@@ -670,9 +768,14 @@ function DashboardPage() {
         <div className="dashboard-container">
           <div className="dashboard-header">
             <h1>Dashboard</h1>
-            <button type="button" className="btn-add-expense" onClick={() => setShowModal(true)}>
-              Add Expense
-            </button>
+            <div>
+              <button type="button" className="btn-edit-categories" onClick={() => setShowCategoryModal(true)}>
+                Categories
+              </button>
+              <button type="button" className="btn-add-expense" onClick={() => setShowModal(true)}>
+                Add Expense
+              </button>
+            </div>
           </div>
 
           <div className="cards">
@@ -697,18 +800,18 @@ function DashboardPage() {
           <div className="section">
             <h2>Budget Progress</h2>
             <div>
-              {BUDGET_CATEGORY_ORDER.map((category) => {
-                const budget = Number(db.categoryBudgets[category] || 0);
+              {categoryBudgetList.map(({ category, budget }) => {
+                const numericBudget = Number(budget || 0);
                 const used = monthlyTransactions
                   .filter((item) => getEffectiveExpenseAmount(item) < 0 && item.category === category)
                   .reduce((sum, item) => sum + Math.abs(getEffectiveExpenseAmount(item)), 0);
-                const usedPercent = budget > 0 ? Math.min(100, (used / budget) * 100) : 0;
+                const usedPercent = numericBudget > 0 ? Math.min(100, (used / numericBudget) * 100) : 0;
 
                 return (
                   <div className="budget-item" key={category}>
                     <p>
                       {categoryLabel(category)} Used: <strong>{formatCurrency(used)} ({Math.round(usedPercent)}%)</strong>
-                      {" "}• Budget: <strong>{formatCurrency(budget)}</strong>
+                      {" "}• Budget: <strong>{formatCurrency(numericBudget)}</strong>
                     </p>
                     <div className="bar" style={{ "--progress": `${Math.round(usedPercent)}%` }}>
                       <div className="bar-fill"></div>
@@ -769,13 +872,9 @@ function DashboardPage() {
               <label htmlFor="expenseType">Expense Type</label>
               <select id="expenseType" name="expenseType" required value={formData.expenseType} onChange={handleInputChange}>
                 <option value="">Select type...</option>
-                <option value="rent">Rent</option>
-                <option value="groceries">Groceries</option>
-                <option value="utilities">Utilities</option>
-                <option value="food">Food</option>
-                <option value="transport">Transport</option>
-                <option value="entertainment">Entertainment</option>
-                <option value="other">Other</option>
+                {categoryBudgetList.map(({ category }) => (
+                  <option key={category} value={category}>{categoryLabel(category)}</option>
+                ))}
               </select>
             </div>
             <div className="form-group">
@@ -811,6 +910,69 @@ function DashboardPage() {
             <div className="modal-actions">
               <button type="button" className="btn-cancel" onClick={closeModal}>Cancel</button>
               <button type="submit" className="btn-submit">Add Expense</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div
+        className={`modal-overlay${showCategoryModal ? " active" : ""}`}
+        onClick={(event) => {
+          if (event.target === event.currentTarget) {
+            closeCategoryModal();
+          }
+        }}
+      >
+        <div className="modal">
+          <button type="button" className="modal-close" aria-label="Close" onClick={closeCategoryModal}>&times;</button>
+          <h2>Edit Categories</h2>
+          <form onSubmit={handleAddCategory}>
+            <div id="categoryBudgetListEdit">
+              {categoryBudgetList.map(({ category, budget }) => (
+                <div className="categoryAdditionInput category-item" key={category}>
+                  <h4>{categoryLabel(category)}</h4>
+                  <div>
+                    <span className="category-budget-amount">{formatCurrency(Number(budget || 0))}</span>
+                    {" "}
+                    <button
+                      type="button"
+                      className="delete-btn"
+                      onClick={() => handleDeleteCategory(category)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="form-group">
+              <label htmlFor="categoryNameInput">Add a Category</label>
+              <div className="categoryAdditionInput">
+                <input
+                  type="text"
+                  id="categoryNameInput"
+                  name="categoryName"
+                  maxLength="50"
+                  placeholder="Add a Category"
+                  value={categoryForm.categoryName}
+                  onChange={handleCategoryFormChange}
+                />
+                <input
+                  type="number"
+                  id="categoryBudgetInput"
+                  name="categoryBudget"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={categoryForm.categoryBudget}
+                  onChange={handleCategoryFormChange}
+                />
+              </div>
+            </div>
+            <p className={`auth-message ${categoryMessageType}`} aria-live="polite">{categoryMessage}</p>
+            <div className="modal-actions">
+              <button type="button" className="btn-cancel" onClick={closeCategoryModal}>Cancel</button>
+              <button type="submit" className="btn-submit">Make Changes</button>
             </div>
           </form>
         </div>

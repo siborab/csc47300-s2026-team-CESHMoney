@@ -9,6 +9,15 @@
     "entertainment": 200,
     "other": 200
   },
+  "categoryBudget2": [
+    {"category": "rent", "budget": 1600},
+    {"category": "groceries", "budget": 450},
+    {"category": "utilities", "budget": 300},
+    {"category": "food", "budget": 500},
+    {"category": "transport", "budget": 250},
+    {"category": "entertainment", "budget": 200},
+    {"category": "other", "budget": 200}
+  ],
   "startingBalance": 12340,
   "transactions": [
     {

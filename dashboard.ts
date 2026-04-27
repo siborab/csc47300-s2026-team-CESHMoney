@@ -2,25 +2,13 @@ const EXPENSES_DB_KEY = "spendwise_expenses_db_v1";
 const EXPENSES_DB_VERSION_KEY = "spendwise_expenses_db_version";
 const EXPENSES_DB_VERSION = "6";
 
-const BUDGET_CATEGORY_ORDER = [
-  "rent",
-  "groceries",
-  "utilities",
-  "food",
-  "transport",
-  "entertainment",
-  "other",
-];
 
-const DEFAULT_CATEGORY_BUDGETS = {
-  rent: 1600,
-  groceries: 450,
-  utilities: 300,
-  food: 500,
-  transport: 250,
-  entertainment: 200,
-  other: 200,
-};
+let debuglog : boolean = true 
+type categoryBudget = {
+  category : string, 
+  budget : number 
+}
+
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -74,34 +62,32 @@ function writeLocalDb(db: any): void {
   localStorage.setItem(EXPENSES_DB_VERSION_KEY, EXPENSES_DB_VERSION);
 }
 
-function normalizeCategory(rawCategory: any): string {
+function normalizeCategory(rawCategory: any, categoryBudget2 : categoryBudget[]): string {
   const category = String(rawCategory || "").trim().toLowerCase();
   if (category === "housing") {
     return "rent";
   }
-  return BUDGET_CATEGORY_ORDER.includes(category) ? category : "other";
+  return categoryBudget2.map((item:any) => item.category).includes(category) ? category : "other";
 }
 
+
 function normalizeDbShape(db: any): {
-  monthlyIncome: number;
-  categoryBudgets: any;
+  monthlyIncome: number; 
+  categoryBudget2: any;
   startingBalance: number;
   transactions: any[];
 } {
   const normalizedTransactions = Array.isArray(db.transactions)
     ? db.transactions.map((item: any) => ({
         ...item,
-        category: normalizeCategory(item.category),
+        category: normalizeCategory(item.category, db.categoryBudget2),
         createdAt: item.createdAt || `${item.date}T00:00:00`,
       }))
     : [];
 
   return {
     monthlyIncome: Number(db.monthlyIncome || 0),
-    categoryBudgets: {
-      ...DEFAULT_CATEGORY_BUDGETS,
-      ...(db.categoryBudgets || {}),
-    },
+    categoryBudget2: db.categoryBudget2,
     startingBalance: Number(db.startingBalance || 0),
     transactions: normalizedTransactions,
   };
@@ -110,22 +96,17 @@ function normalizeDbShape(db: any): {
 async function loadSeedDb(): Promise<any> {
   const response = await fetch("./expenses.json", { cache: "no-store" });
   const data = await response.json();
+  if (debuglog === true){console.log("initial exprenses.json read:", data)} 
   return normalizeDbShape(data);
 }
 
-function categoryLabel(category: any): string {
-  const labels: Record<string, string> = {
-    rent: "Rent",
-    groceries: "Groceries",
-    utilities: "Utilities",
-    food: "Food",
-    transport: "Transport",
-    entertainment: "Entertainment",
-    other: "Other",
-    housing: "Housing",
-    income: "Income",
-  };
-  return labels[category] || "Other";
+function categoryLabel(category: string): string {
+    // capitalize first letter 
+  return category
+    .toLowerCase() // Optional: Ensure other letters are lowercase
+    .split(' ')    // Split into an array of words
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // Capitalize each
+    .join(' ');    // Join back into a single string
 }
 
 function transactionSortValue(item: any): string {
@@ -158,16 +139,18 @@ function renderBudgetProgress(db: any): number {
   }
 
   const monthlyTransactions = db.transactions.filter((item: any) => isInCurrentMonth(item.date));
-  const html = BUDGET_CATEGORY_ORDER.map((category) => {
-    const budget = Number(db.categoryBudgets[category] || 0);
+  let catBugList = db.categoryBudget2 
+
+  const html = catBugList.map((i:categoryBudget) => {
+    const budget = Number(i.budget || 0);
     const used = monthlyTransactions
-      .filter((item: any) => getEffectiveExpenseAmount(item) < 0 && item.category === category)
+      .filter((item: any) => getEffectiveExpenseAmount(item) < 0 && item.category === i.category)
       .reduce((sum: number, item: any) => sum + Math.abs(getEffectiveExpenseAmount(item)), 0);
 
     const usedPercent = budget > 0 ? Math.min(100, (used / budget) * 100) : 0;
     return `
       <div class="budget-item">
-        <p>${categoryLabel(category)} Used: <strong>${formatCurrency(used)} (${Math.round(usedPercent)}%)</strong> • Budget: <strong>${formatCurrency(budget)}</strong></p>
+        <p>${categoryLabel(i.category)} Used: <strong>${formatCurrency(used)} (${Math.round(usedPercent)}%)</strong> • Budget: <strong>${formatCurrency(budget)}</strong></p>
         <div class="bar" style="--progress: ${Math.round(usedPercent)}%;">
           <div class="bar-fill"></div>
         </div>
@@ -176,11 +159,9 @@ function renderBudgetProgress(db: any): number {
   }).join("");
 
   progressListEl.innerHTML = html;
-
-  const totalBudget = BUDGET_CATEGORY_ORDER.reduce(
-    (sum, category) => sum + Number(db.categoryBudgets[category] || 0),
-    0
-  );
+  const bugList:number[] = catBugList.map((item:categoryBudget) => item.budget);
+  const totalBudget = (bugList.reduce((accumulator, currentValue) => accumulator + currentValue, 0) || 0);
+  
   const totalUsed = monthlyTransactions
     .filter((item: any) => getEffectiveExpenseAmount(item) < 0)
     .reduce((sum: number, item: any) => sum + Math.abs(getEffectiveExpenseAmount(item)), 0);
@@ -259,6 +240,60 @@ function setAddExpenseMessage(text: string, type: string): void {
   messageEl.className = `auth-message ${type}`;
 }
 
+function setAddCategoryMessage(text: string, type: string): void {
+  const messageEl = document.getElementById("AddCategoryMessage");
+  if (!messageEl) {
+    return;
+  }
+  messageEl.textContent = text;
+  messageEl.className = `auth-message ${type}`;
+}
+
+function setCategoryList(dbRef: any): void {
+  const categoryList = document.getElementById("categoryBudgetListEdit");
+  if (!categoryList) return;
+
+  const categories = dbRef.current.categoryBudget2 || [];
+
+  categoryList.innerHTML = categories
+    .map( // <input class = "form-group" value="${item.budget}"> later
+      (item: categoryBudget) => `
+        <div class="categoryAdditionInput category-item">
+          <h4>${item.category}</h4>
+          
+          <div>
+          
+          <button type="button" data-category="${item.category}" class="delete-btn">
+            Delete
+          </button></div>
+        </div>
+      `
+    )
+    .join("");
+
+  // attach delete handlers
+  const buttons = categoryList.querySelectorAll(".delete-btn");
+
+  buttons.forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const category = (e.currentTarget as HTMLElement).dataset.category;
+
+      if (!category) return;
+
+      dbRef.current.categoryBudget2 =
+        dbRef.current.categoryBudget2.filter(
+          (item: categoryBudget) => item.category !== category
+        );
+
+      writeLocalDb(dbRef.current);
+      renderDashboard(dbRef.current);
+
+      setCategoryList(dbRef);
+      renderExpenseCategoryOptions(dbRef);
+    });
+  });
+}
+
 function expenseTypeToDescription(type: any): string {
   const labels: Record<string, string> = {
     rent: "Rent",
@@ -272,6 +307,23 @@ function expenseTypeToDescription(type: any): string {
   return labels[type] || "Expense";
 }
 
+function renderExpenseCategoryOptions(dbRef: any): void {
+  const expenseTypeSelect = document.getElementById("expenseType") as HTMLSelectElement | null;
+  if (!expenseTypeSelect) return;
+  
+  const categories = dbRef.current.categoryBudget2 || [];
+    expenseTypeSelect.innerHTML = `
+      <option value="">Select type...</option>
+      ${categories
+        .map((item: categoryBudget) =>
+          `<option value="${item.category}">${categoryLabel(item.category)}</option>`
+        )
+        .join("")}
+    `;
+}
+
+
+
 function initModalHandlers(dbRef: any): void {
   const modal = document.getElementById("addExpenseModal");
   const openBtn = document.getElementById("openAddExpenseBtn");
@@ -283,6 +335,8 @@ function initModalHandlers(dbRef: any): void {
   const totalWithTipEl = document.getElementById("totalWithTipValue");
   const splitPreviewEl = document.getElementById("splitPreview");
   const splitCountInput = document.getElementById("splitCount") as any;
+  const expenseCategoryList = document.getElementById("expenseCategoryList");
+  const expenseTypeSelect = document.getElementById("expenseType") as HTMLSelectElement;
 
   if (
     !modal ||
@@ -294,11 +348,12 @@ function initModalHandlers(dbRef: any): void {
     !splitSection ||
     !totalWithTipEl ||
     !splitPreviewEl ||
-    !splitCountInput
+    !splitCountInput || 
+    !expenseTypeSelect
   ) {
     return;
   }
-
+ 
   const getTotalWithTip = (): number => {
     const baseAmount = Number(form.baseAmount.value);
     const tipPercent = Number(form.tipPercent.value || 0);
@@ -345,7 +400,7 @@ function initModalHandlers(dbRef: any): void {
     form.reset();
     setAddExpenseMessage("", "");
     refreshTotalWithTip();
-    setSplitSectionState();
+    setSplitSectionState(); 
   };
 
   const closeModal = (): void => {
@@ -367,6 +422,7 @@ function initModalHandlers(dbRef: any): void {
       closeModal();
     }
   });
+
 
   form.baseAmount.addEventListener("input", refreshTotalWithTip);
   form.baseAmount.addEventListener("input", refreshSplitPreview);
@@ -422,7 +478,7 @@ function initModalHandlers(dbRef: any): void {
       date: new Date().toISOString().slice(0, 10),
       createdAt: new Date().toISOString(),
       description,
-      category: normalizeCategory(expenseType),
+      category: normalizeCategory(expenseType, dbRef.current.categoryBudget2),
       amount: -Math.abs(effectiveAmount),
       totalAmount: -Math.abs(totalAmount),
       type: "expense",
@@ -440,19 +496,98 @@ function initModalHandlers(dbRef: any): void {
   });
 }
 
+function initModalCategoryHandler(dbRef:any): void {
+  const modal = document.getElementById("editCategoryModel");
+  const openBtn = document.getElementById("openEditCategoriesBtn");
+  const closeBtn = document.getElementById("closeEditCategoryBtn");
+  const cancelBtn = document.getElementById("cancelEditCaetegoryBtn");
+  const nameInput = document.getElementById("categoryNameInput");
+  const budgetInput = document.getElementById("categoryBudgetInput");
+  const form = document.getElementById("editCategoriesForm") as any;
+
+  if (!modal || !openBtn || !closeBtn || !cancelBtn || !nameInput || !budgetInput || !form) {
+    return;
+  }
+  
+
+  const closeModal = (): void => {
+    resetModalForm()
+    modal.classList.remove("active");
+  };
+
+  openBtn.addEventListener("click", (): void => {
+    setCategoryList(dbRef); 
+    modal.classList.add("active");
+  });
+
+  closeBtn.addEventListener("click", closeModal);
+  cancelBtn.addEventListener("click", closeModal);
+
+  modal.addEventListener("click", (event: MouseEvent): void => {
+    if (event.target === modal) {
+      closeModal();
+    }
+  });
+
+  const resetModalForm = (): void => {
+    form.reset();
+    setAddCategoryMessage("", ""); 
+  };
+
+
+
+
+
+  form.addEventListener("submit", (event: Event): void => {
+    event.preventDefault();
+    if(debuglog == true) {console.log("Category Submitted!")}
+
+    const name = form.categoryName.value;
+    const budget = Number(form.categoryBudget.value); 
+
+    if (!name || !budget ) {
+      setAddExpenseMessage("Please fill all fields with a valid amount.", "error");
+      return;
+    }
+
+    if (!Number.isFinite(budget)) {
+      setAddExpenseMessage("Budget is invalid.", "error");
+      return;
+    }
+
+    dbRef.current.categoryBudget2.unshift({
+      category: name,
+      budget: budget,
+    });
+    writeLocalDb(dbRef.current);
+    renderDashboard(dbRef.current);
+    renderExpenseCategoryOptions(dbRef);
+    setCategoryList(dbRef); 
+    setAddCategoryMessage("Category added successfully.", "success");
+    setTimeout(closeModal, 500);
+  });
+
+
+
+
+
+
+
+}
+
+
 (async function initDashboard(): Promise<void> {
   const localDbVersion = localStorage.getItem(EXPENSES_DB_VERSION_KEY);
   const localDb = localDbVersion === EXPENSES_DB_VERSION ? readLocalDb() : null;
   const dbRef = { current: localDb ? normalizeDbShape(localDb) : null };
-
+  
   if (!dbRef.current) {
     try {
       dbRef.current = await loadSeedDb();
       writeLocalDb(dbRef.current);
     } catch (error) {
       dbRef.current = normalizeDbShape({
-        monthlyIncome: 0,
-        categoryBudgets: DEFAULT_CATEGORY_BUDGETS,
+        monthlyIncome: 0, 
         startingBalance: 0,
         transactions: [],
       });
@@ -461,4 +596,5 @@ function initModalHandlers(dbRef: any): void {
 
   renderDashboard(dbRef.current);
   initModalHandlers(dbRef);
+  initModalCategoryHandler(dbRef);
 })();
