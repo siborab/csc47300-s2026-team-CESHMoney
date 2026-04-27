@@ -10,6 +10,8 @@ export const EXPENSES_DB_VERSION = "6";
 export const HOME_CURRENCY_KEY = "spendwise_home_currency";
 export const LOCKED_RATE_KEY = "spendwise_locked_rate_snapshot";
 export const FAVORITE_PAIRS_KEY = "spendwise_favorite_currency_pairs";
+// Staged category edits awaiting approval (not applied to EXPENSES_DB_KEY until approved).
+export const PENDING_CATEGORIES_KEY = "spendwise_category_pending_approval_v1";
 
 // Default categories used by the dashboard budget summary.
 // Categories are stored as an array of { category, budget } so the user can add
@@ -259,4 +261,31 @@ export function buildEqualSplit(count, totalAmount) {
   const totalCents = Math.round(totalAmount * 100);
   const perPersonCents = Math.round(totalCents / count);
   return perPersonCents / 100;
+}
+
+export function readPendingCategoryChanges() {
+  return readJsonFromStorage(PENDING_CATEGORIES_KEY, null);
+}
+
+export function writePendingCategoryChanges(payload) {
+  localStorage.setItem(PENDING_CATEGORIES_KEY, JSON.stringify(payload));
+}
+
+export function clearPendingCategoryChanges() {
+  localStorage.removeItem(PENDING_CATEGORIES_KEY);
+}
+
+// Applies renames in order so chained renames (a→b, b→c) update transactions correctly.
+export function applyCategoryRenamesToTransactions(transactions, renames) {
+  if (!Array.isArray(transactions) || !Array.isArray(renames) || renames.length === 0) {
+    return Array.isArray(transactions) ? transactions : [];
+  }
+  let txs = transactions;
+  for (const { from, to } of renames) {
+    if (!from || from === to) {
+      continue;
+    }
+    txs = txs.map((t) => (t.category === from ? { ...t, category: to } : t));
+  }
+  return txs;
 }
