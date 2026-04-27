@@ -436,7 +436,7 @@ header nav a:hover::after {
 }
 
 /* STYLES FROM DASHBOARD.HTML */
-/* Ensure header/navbar matches homepage - load style.css rules with higher specificity */
+/* Ensure header/navbar matches homepage - load base.css rules with higher specificity */
     body header {
       background-color: #2c3e50;
       color: #fff;

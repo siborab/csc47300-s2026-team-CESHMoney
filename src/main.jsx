@@ -2,10 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App.jsx";
-import "../style.css";
-import "../dashboard.css";
-import "../feature-pages.css";
-import "../currency-conversion.css";
+import "./styles/index.css";
 
 // Shows runtime errors on screen instead of failing with a blank page during development.
 class RootErrorBoundary extends React.Component {
