@@ -389,3 +389,214 @@ tr:nth-child(even) td {
     border-color: #ecf0f100;
     background: rgba(52, 152, 219, 1);
 }
+
+.category-modal-hint {
+  font-size: 0.92rem;
+  color: var(--muted);
+  margin: 0.35rem 0 1rem 0;
+  line-height: 1.45;
+}
+
+/* Edit Categories: cap height; scroll the list, keep add/actions visible */
+.modal.modal--categories {
+  max-width: 32rem;
+  width: 92%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 1.5rem 1.5rem 1rem;
+}
+
+.modal--categories h2 {
+  margin: 0 0 0.35rem 0;
+  flex-shrink: 0;
+  padding-right: 2.25rem;
+}
+
+.modal--categories .category-modal-hint {
+  margin: 0 0 0.75rem 0;
+  flex-shrink: 0;
+}
+
+.modal-categories-form {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.category-list-scroll {
+  flex: 1 1 auto;
+  min-height: 3.5rem;
+  /* Caps list height so the modal never fills the viewport; list scrolls inside */
+  max-height: min(48vh, 22rem);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding-right: 0.35rem;
+  margin: 0 0 0.5rem 0;
+}
+
+.category-modal-footer {
+  flex: 0 0 auto;
+  padding-top: 0.65rem;
+  border-top: 1px solid var(--border);
+}
+
+.category-item-editable {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+  margin-bottom: 0.85rem;
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.category-editable-fields {
+  display: grid;
+  grid-template-columns: 1fr minmax(6.5rem, 9rem);
+  gap: 0.75rem 1rem;
+  align-items: end;
+  margin-bottom: 0.65rem;
+}
+
+@media (max-width: 520px) {
+  .category-editable-fields {
+    grid-template-columns: 1fr;
+  }
+}
+
+.category-editable-fields .form-group {
+  margin-bottom: 0;
+}
+
+.category-editable-fields label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.category-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.btn-save-category {
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  border: none;
+  font-size: 0.95rem;
+  font-family: inherit;
+  cursor: pointer;
+  background: #27ae60;
+  color: #fff;
+}
+
+.btn-save-category:hover {
+  background: #219a52;
+}
+
+/* On small viewports, generic .modal uses overflow-y: auto; keep categories inner-scroll instead */
+@media (max-width: 620px) {
+  .modal.modal--categories {
+    max-height: 90vh;
+    overflow: hidden;
+    width: 94%;
+  }
+}
+
+/* Pending category-approval notice */
+.category-approval-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.9rem 1.25rem;
+  margin-bottom: 1.25rem;
+  padding: 0.9rem 1.1rem;
+  background: linear-gradient(135deg, rgba(52, 152, 219, 0.12) 0%, rgba(39, 174, 96, 0.1) 100%);
+  border: 1px solid rgba(52, 152, 219, 0.35);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.category-approval-banner p {
+  margin: 0;
+  flex: 1 1 14rem;
+}
+
+.category-approval-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.btn-approve-categories {
+  padding: 0.45rem 1rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  background: #27ae60;
+  color: #fff;
+}
+
+.btn-approve-categories:hover {
+  background: #219a52;
+}
+
+.btn-reject-categories {
+  padding: 0.45rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  background: var(--surface-solid, #fff);
+  color: var(--text);
+}
+
+.btn-reject-categories:hover {
+  background: #f1f2f4;
+}
+
+.category-add-form .form-group {
+  margin-bottom: 0.65rem;
+}
+
+.category-add-actions {
+  margin-bottom: 0.35rem;
+}
+
+.btn-add-category-inline {
+  padding: 0.4rem 0.9rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  cursor: pointer;
+  background: rgba(52, 152, 219, 0.2);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.btn-add-category-inline:hover {
+  background: rgba(52, 152, 219, 0.32);
+}
+
+.category-modal-final-actions {
+  margin-top: 0.75rem;
+}

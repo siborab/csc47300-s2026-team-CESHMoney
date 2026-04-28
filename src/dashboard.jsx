@@ -4,8 +4,10 @@ import {
   EXPENSES_DB_KEY,
   EXPENSES_DB_VERSION,
   EXPENSES_DB_VERSION_KEY,
+  applyCategoryRenamesToTransactions,
   buildEqualSplit,
   categoryLabel,
+  clearPendingCategoryChanges,
   expenseTypeToDescription,
   formatCurrency,
   formatShortDate,
@@ -15,12 +17,14 @@ import {
   normalizeCategory,
   normalizeDbShape,
   readJsonFromStorage,
+  readPendingCategoryChanges,
   transactionSortValue,
-  writeLocalDb
+  writeLocalDb,
+  writePendingCategoryChanges
 } from "./utils.js";
 
 // Dashboard page with summary cards, transaction table, add-expense modal,
-// and the "Edit Categories" modal that lets users add/remove budget categories.
+// and the "Edit Categories" modal to add, rename, change budgets, or remove categories.
 // Replaces the legacy dashboard.ts/dashboard.js implementation.
 export function DashboardPage() {
   const [db, setDb] = useState(null);
@@ -35,11 +39,19 @@ export function DashboardPage() {
     isSplitExpense: false,
     splitCount: "2"
   });
-  // State for the "Edit Categories" modal that lets the user add/remove budget categories.
+  // State for the "Edit Categories" modal: add new rows + edit existing name/budget.
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [categoryForm, setCategoryForm] = useState({ categoryName: "", categoryBudget: "" });
+  // Draft values per existing category key (for rename and budget changes).
+  const [categoryRowDrafts, setCategoryRowDrafts] = useState({});
   const [categoryMessage, setCategoryMessage] = useState("");
   const [categoryMessageType, setCategoryMessageType] = useState("");
+  // Submitted for approval; live budget stays in db until approved.
+  const [pendingCategoryApproval, setPendingCategoryApproval] = useState(() => readPendingCategoryChanges());
+  // Working list while the Edit Categories modal is open (not saved until "Submit for approval").
+  const [categoryEditDraft, setCategoryEditDraft] = useState(null);
+  // Rename operations to apply to transactions on final approval, in order.
+  const [categoryRenames, setCategoryRenames] = useState([]);
 
   useEffect(() => {
     async function loadDb() {
@@ -195,9 +207,47 @@ export function DashboardPage() {
 
   function closeCategoryModal() {
     setShowCategoryModal(false);
+    setCategoryEditDraft(null);
+    setCategoryRenames([]);
+    setCategoryForm({ categoryName: "", categoryBudget: "" });
+    setCategoryRowDrafts({});
+    setCategoryMessage("");
+    setCategoryMessageType("");
+  }
+
+  function openCategoryModal() {
+    if (!db) {
+      return;
+    }
+    const pending = readPendingCategoryChanges();
+    const list = pending && Array.isArray(pending.categoryBudget2)
+      ? pending.categoryBudget2.map((row) => ({ ...row }))
+      : db.categoryBudget2.map((row) => ({ ...row }));
+    const renames = pending && Array.isArray(pending.renames) ? [...pending.renames] : [];
+    setCategoryEditDraft(list);
+    setCategoryRenames(renames);
+    const next = {};
+    for (const { category, budget } of list) {
+      next[category] = {
+        name: category,
+        budget: String(Number(budget) || 0)
+      };
+    }
+    setCategoryRowDrafts(next);
     setCategoryForm({ categoryName: "", categoryBudget: "" });
     setCategoryMessage("");
     setCategoryMessageType("");
+    setShowCategoryModal(true);
+  }
+
+  function patchCategoryRowDraft(categoryKey, updates, fallbacks) {
+    setCategoryRowDrafts((prev) => {
+      const base = prev[categoryKey] ?? {
+        name: fallbacks.name,
+        budget: fallbacks.budget
+      };
+      return { ...prev, [categoryKey]: { ...base, ...updates } };
+    });
   }
 
   function handleCategoryFormChange(event) {
@@ -206,24 +256,73 @@ export function DashboardPage() {
   }
 
   function handleDeleteCategory(categoryName) {
-    if (!db) {
+    if (!categoryEditDraft) {
       return;
     }
-    const nextList = db.categoryBudget2.filter(
+    const nextList = categoryEditDraft.filter(
       (item) => item.category !== categoryName
     );
-    const nextDb = { ...db, categoryBudget2: nextList };
-    writeLocalDb(nextDb);
-    setDb(nextDb);
-    // Clear the expense-type selection if it referenced the deleted category.
-    if (formData.expenseType === categoryName) {
-      setFormData((current) => ({ ...current, expenseType: "" }));
-    }
+    setCategoryEditDraft(nextList);
+    setCategoryRowDrafts((prev) => {
+      const next = { ...prev };
+      delete next[categoryName];
+      return next;
+    });
+    setCategoryMessage("Removed from this draft. Submit for approval to finalize.");
+    setCategoryMessageType("success");
   }
 
-  function handleAddCategory(event) {
+  function handleUpdateCategory(oldKey) {
+    if (!categoryEditDraft) {
+      return;
+    }
+    const draft = categoryRowDrafts[oldKey];
+    if (!draft) {
+      return;
+    }
+    const rawName = String(draft.name || "").trim();
+    const newKey = rawName.toLowerCase();
+    const budget = Number(draft.budget);
+
+    if (!rawName || !Number.isFinite(budget) || budget <= 0) {
+      setCategoryMessage("Each category needs a name and a budget greater than zero.");
+      setCategoryMessageType("error");
+      return;
+    }
+
+    if (newKey !== oldKey) {
+      const nameTaken = categoryEditDraft.some(
+        (item) => item.category === newKey && item.category !== oldKey
+      );
+      if (nameTaken) {
+        setCategoryMessage("A category with that name already exists.");
+        setCategoryMessageType("error");
+        return;
+      }
+    }
+
+    const nextList = categoryEditDraft.map((item) =>
+      item.category === oldKey ? { category: newKey, budget } : item
+    );
+    setCategoryEditDraft(nextList);
+    if (newKey !== oldKey) {
+      setCategoryRenames((current) => [...current, { from: oldKey, to: newKey }]);
+    }
+
+    setCategoryRowDrafts((prev) => {
+      const next = { ...prev };
+      delete next[oldKey];
+      next[newKey] = { name: newKey, budget: String(budget) };
+      return next;
+    });
+
+    setCategoryMessage("Draft updated. Submit for approval to apply to your budget.");
+    setCategoryMessageType("success");
+  }
+
+  function handleAddCategoryDraft(event) {
     event.preventDefault();
-    if (!db) {
+    if (!categoryEditDraft) {
       return;
     }
 
@@ -237,23 +336,85 @@ export function DashboardPage() {
       return;
     }
 
-    if (db.categoryBudget2.some((item) => item.category === name)) {
-      setCategoryMessage("Category already exists.");
+    if (categoryEditDraft.some((item) => item.category === name)) {
+      setCategoryMessage("Category already exists in this draft.");
       setCategoryMessageType("error");
       return;
     }
 
-    const nextDb = {
-      ...db,
-      // Newest categories appear first to match the prior dashboard.js behavior.
-      categoryBudget2: [{ category: name, budget }, ...db.categoryBudget2]
+    setCategoryEditDraft(
+      [{ category: name, budget }, ...categoryEditDraft]
+    );
+    setCategoryForm({ categoryName: "", categoryBudget: "" });
+    setCategoryRowDrafts((prev) => ({
+      ...prev,
+      [name]: { name, budget: String(budget) }
+    }));
+    setCategoryMessage("Added to draft. Submit for approval to save.");
+    setCategoryMessageType("success");
+  }
+
+  function areCategoryListsEqual(a, b) {
+    if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) {
+      return false;
+    }
+    return JSON.stringify(a) === JSON.stringify(b);
+  }
+
+  function handleSubmitForApproval() {
+    if (!db || !categoryEditDraft) {
+      return;
+    }
+    if (areCategoryListsEqual(categoryEditDraft, db.categoryBudget2)) {
+      setCategoryMessage("No changes to submit compared to the current approved budget.");
+      setCategoryMessageType("error");
+      return;
+    }
+    const renames = categoryRenames;
+    const payload = {
+      categoryBudget2: categoryEditDraft.map((row) => ({ ...row })),
+      renames: renames.map((r) => ({ ...r })),
+      submittedAt: new Date().toISOString()
     };
+    writePendingCategoryChanges(payload);
+    setPendingCategoryApproval(payload);
+    setCategoryMessage("Submitted for approval. Approve on the dashboard below to apply.");
+    setCategoryMessageType("success");
+    setTimeout(() => {
+      closeCategoryModal();
+    }, 600);
+  }
+
+  function handleApprovePending() {
+    if (!db || !pendingCategoryApproval) {
+      return;
+    }
+    const { categoryBudget2, renames = [] } = pendingCategoryApproval;
+    let nextTransactions = applyCategoryRenamesToTransactions(db.transactions, renames);
+    const keySet = new Set(categoryBudget2.map((c) => c.category));
+    nextTransactions = nextTransactions.map((t) => {
+      if (keySet.has(t.category)) {
+        return t;
+      }
+      return { ...t, category: normalizeCategory(t.category, categoryBudget2) };
+    });
+    const nextDb = normalizeDbShape({
+      ...db,
+      categoryBudget2,
+      transactions: nextTransactions
+    });
     writeLocalDb(nextDb);
     setDb(nextDb);
-    setCategoryForm({ categoryName: "", categoryBudget: "" });
-    setCategoryMessage("Category added successfully.");
-    setCategoryMessageType("success");
-    setTimeout(closeCategoryModal, 500);
+    clearPendingCategoryChanges();
+    setPendingCategoryApproval(null);
+    if (formData.expenseType && !nextDb.categoryBudget2.some((c) => c.category === formData.expenseType)) {
+      setFormData((current) => ({ ...current, expenseType: "" }));
+    }
+  }
+
+  function handleRejectPending() {
+    clearPendingCategoryChanges();
+    setPendingCategoryApproval(null);
   }
 
   if (!db) {
@@ -299,7 +460,7 @@ export function DashboardPage() {
           <div className="dashboard-header">
             <h1>Dashboard</h1>
             <div>
-              <button type="button" className="btn-edit-categories" onClick={() => setShowCategoryModal(true)}>
+              <button type="button" className="btn-edit-categories" onClick={openCategoryModal}>
                 Categories
               </button>
               <button type="button" className="btn-add-expense" onClick={() => setShowModal(true)}>
@@ -307,6 +468,26 @@ export function DashboardPage() {
               </button>
             </div>
           </div>
+
+          {pendingCategoryApproval && (
+            <div className="category-approval-banner" role="status">
+              <p>
+                <strong>Pending approval:</strong> category changes are waiting to be applied to your live budget
+                {pendingCategoryApproval.submittedAt && (
+                  <> — submitted {new Date(pendingCategoryApproval.submittedAt).toLocaleString()}</>
+                )}
+                . Approve to apply and update transactions, or reject to discard this proposal.
+              </p>
+              <div className="category-approval-actions">
+                <button type="button" className="btn-approve-categories" onClick={handleApprovePending}>
+                  Approve
+                </button>
+                <button type="button" className="btn-reject-categories" onClick={handleRejectPending}>
+                  Reject
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="cards">
             <div className="card">
@@ -453,58 +634,112 @@ export function DashboardPage() {
           }
         }}
       >
-        <div className="modal">
+        <div className="modal modal--categories">
           <button type="button" className="modal-close" aria-label="Close" onClick={closeCategoryModal}>&times;</button>
           <h2>Edit Categories</h2>
-          <form onSubmit={handleAddCategory}>
-            <div id="categoryBudgetListEdit">
-              {categoryBudgetList.map(({ category, budget }) => (
-                <div className="categoryAdditionInput category-item" key={category}>
-                  <h4>{categoryLabel(category)}</h4>
-                  <div>
-                    <span className="category-budget-amount">{formatCurrency(Number(budget || 0))}</span>
-                    {" "}
-                    <button
-                      type="button"
-                      className="delete-btn"
-                      onClick={() => handleDeleteCategory(category)}
-                    >
-                      Delete
-                    </button>
+          <p className="category-modal-hint">
+            Edits apply to a draft only. Use <strong>Submit for approval</strong> when you are ready; then approve or reject on the dashboard. Renames are applied to past transactions when approved.
+          </p>
+          <div className="modal-categories-form">
+            <div id="categoryBudgetListEdit" className="category-list-scroll">
+              {(categoryEditDraft || []).map(({ category, budget }) => {
+                const defaultBudget = String(Number(budget) || 0);
+                const draft = categoryRowDrafts[category] ?? {
+                  name: category,
+                  budget: defaultBudget
+                };
+                return (
+                  <div className="category-item category-item-editable" key={category}>
+                    <div className="category-editable-fields">
+                      <div className="form-group category-field-name">
+                        <label htmlFor={`cat-name-${category}`}>Category</label>
+                        <input
+                          id={`cat-name-${category}`}
+                          type="text"
+                          maxLength="50"
+                          value={draft.name}
+                          onChange={(event) => patchCategoryRowDraft(
+                            category,
+                            { name: event.target.value },
+                            { name: category, budget: defaultBudget }
+                          )}
+                        />
+                      </div>
+                      <div className="form-group category-field-budget">
+                        <label htmlFor={`cat-budget-${category}`}>Monthly budget ($)</label>
+                        <input
+                          id={`cat-budget-${category}`}
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={draft.budget}
+                          onChange={(event) => patchCategoryRowDraft(
+                            category,
+                            { budget: event.target.value },
+                            { name: category, budget: defaultBudget }
+                          )}
+                        />
+                      </div>
+                    </div>
+                    <div className="category-row-actions">
+                      <button
+                        type="button"
+                        className="btn-save-category"
+                        onClick={() => handleUpdateCategory(category)}
+                      >
+                        Apply
+                      </button>
+                      <button
+                        type="button"
+                        className="delete-btn"
+                        onClick={() => handleDeleteCategory(category)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="category-modal-footer">
+              <form className="category-add-form" onSubmit={handleAddCategoryDraft}>
+                <div className="form-group">
+                  <label htmlFor="categoryNameInput">Add a category</label>
+                  <div className="categoryAdditionInput">
+                    <input
+                      type="text"
+                      id="categoryNameInput"
+                      name="categoryName"
+                      maxLength="50"
+                      placeholder="Category name"
+                      value={categoryForm.categoryName}
+                      onChange={handleCategoryFormChange}
+                    />
+                    <input
+                      type="number"
+                      id="categoryBudgetInput"
+                      name="categoryBudget"
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={categoryForm.categoryBudget}
+                      onChange={handleCategoryFormChange}
+                    />
                   </div>
                 </div>
-              ))}
-            </div>
-            <div className="form-group">
-              <label htmlFor="categoryNameInput">Add a Category</label>
-              <div className="categoryAdditionInput">
-                <input
-                  type="text"
-                  id="categoryNameInput"
-                  name="categoryName"
-                  maxLength="50"
-                  placeholder="Add a Category"
-                  value={categoryForm.categoryName}
-                  onChange={handleCategoryFormChange}
-                />
-                <input
-                  type="number"
-                  id="categoryBudgetInput"
-                  name="categoryBudget"
-                  min="0"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={categoryForm.categoryBudget}
-                  onChange={handleCategoryFormChange}
-                />
+                <div className="category-add-actions">
+                  <button type="submit" className="btn-add-category-inline">Add to draft</button>
+                </div>
+              </form>
+              <p className={`auth-message ${categoryMessageType}`} aria-live="polite">{categoryMessage}</p>
+              <div className="modal-actions category-modal-final-actions">
+                <button type="button" className="btn-cancel" onClick={closeCategoryModal}>Cancel</button>
+                <button type="button" className="btn-submit" onClick={handleSubmitForApproval}>
+                  Submit for approval
+                </button>
               </div>
             </div>
-            <p className={`auth-message ${categoryMessageType}`} aria-live="polite">{categoryMessage}</p>
-            <div className="modal-actions">
-              <button type="button" className="btn-cancel" onClick={closeCategoryModal}>Cancel</button>
-              <button type="submit" className="btn-submit">Make Changes</button>
-            </div>
-          </form>
+          </div>
         </div>
       </div>
     </>
