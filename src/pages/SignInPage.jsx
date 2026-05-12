@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { login } from "../api/spendwise";
 import { normalizeEmail, writeSession } from "../utils/storage";
 
 export default function SignInPage({ onLogin }) {
@@ -8,37 +9,34 @@ export default function SignInPage({ onLogin }) {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(event) {
     event.preventDefault();
+    setSubmitting(true);
+    setMessage("");
+    setMessageType("");
     try {
-      const response = await fetch("/user.json", { cache: "no-store" });
-      const data = await response.json();
-      const users = Array.isArray(data.users) ? data.users : [];
-      const matchedUser = users.find(
-        (user) => normalizeEmail(user.email) === normalizeEmail(email) && user.password === password
-      );
-
-      if (!matchedUser) {
-        setMessage("Invalid email or password");
-        setMessageType("error");
-        return;
-      }
-
-      writeSession({
-        id: matchedUser.id,
-        fullName: matchedUser.fullName,
-        email: matchedUser.email
+      const user = await login({
+        email: normalizeEmail(email),
+        password
       });
+      writeSession(user);
       onLogin();
       setMessage("Login success, redirecting...");
       setMessageType("success");
       setTimeout(() => {
-        navigate("/");
-      }, 700);
+        if (user.role === "admin") {
+          navigate("/admin");
+        } else {
+          navigate(`/users/${user.id}`);
+        }
+      }, 500);
     } catch (error) {
-      setMessage("Cannot read user.json");
+      setMessage(error.message);
       setMessageType("error");
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -59,11 +57,18 @@ export default function SignInPage({ onLogin }) {
             <input id="signinPassword" name="signinPassword" type="password" required value={password} onChange={(event) => setPassword(event.target.value)} />
           </div>
 
-          <button type="submit" className="auth-submit">Sign In</button>
+          <button type="submit" className="auth-submit" disabled={submitting}>
+            {submitting ? "Signing in..." : "Sign In"}
+          </button>
           <p className={`auth-message ${messageType}`} aria-live="polite">{message}</p>
         </form>
 
-        <p className="auth-links">Need an account? <Link to="/signup">Create one here</Link>.</p>
+        <p className="auth-links">
+          Need an account? <Link to="/signup">Create one here</Link>.
+        </p>
+        <p className="auth-links" style={{ fontSize: "0.85em", opacity: 0.7 }}>
+          Demo: <code>demo@spendwise.com / demo123</code> &middot; Admin: <code>admin@spendwise.com / admin123</code>
+        </p>
       </section>
     </main>
   );

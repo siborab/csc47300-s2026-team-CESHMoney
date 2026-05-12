@@ -1,34 +1,50 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { normalizeEmail } from "../utils/storage";
+import { Link, useNavigate } from "react-router-dom";
+import { signUp } from "../api/spendwise";
+import { normalizeEmail, writeSession } from "../utils/storage";
 
-export default function SignUpPage() {
+export default function SignUpPage({ onLogin }) {
+  const navigate = useNavigate();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
-
     if (!fullName.trim() || !normalizeEmail(email) || !password) {
       setMessage("Please fill all required fields.");
       setMessageType("error");
       return;
     }
-
     if (password.length < 6) {
       setMessage("Password must be at least 6 characters.");
       setMessageType("error");
       return;
     }
 
-    setMessage("Sign-up submitted. Demo mode only: add this account to user.json to enable login.");
-    setMessageType("success");
-    setFullName("");
-    setEmail("");
-    setPassword("");
+    setSubmitting(true);
+    setMessage("");
+    setMessageType("");
+    try {
+      const user = await signUp({
+        fullName: fullName.trim(),
+        email: normalizeEmail(email),
+        password
+      });
+      writeSession(user);
+      onLogin?.();
+      setMessage(`Welcome, ${user.fullName}! Redirecting to your profile...`);
+      setMessageType("success");
+      setTimeout(() => navigate(`/users/${user.id}`), 600);
+    } catch (error) {
+      setMessage(error.message);
+      setMessageType("error");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -53,7 +69,9 @@ export default function SignUpPage() {
             <input id="password" name="password" type="password" minLength="6" required value={password} onChange={(event) => setPassword(event.target.value)} />
           </div>
 
-          <button type="submit" className="auth-submit">Sign Up</button>
+          <button type="submit" className="auth-submit" disabled={submitting}>
+            {submitting ? "Creating..." : "Sign Up"}
+          </button>
           <p className={`auth-message ${messageType}`} aria-live="polite">{message}</p>
         </form>
 

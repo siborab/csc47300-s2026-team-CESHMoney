@@ -1,21 +1,48 @@
 import React, { useEffect, useState } from "react";
-import { BUDGET_CATEGORY_ORDER } from "../utils/constants";
+import { useNavigate } from "react-router-dom";
+import { listCategories, listExpenses } from "../api/spendwise";
+import { categoryRowToBudgetEntry, expenseRowToTransaction } from "../utils/dataAdapter";
 import { categoryLabel, getEffectiveExpenseAmount, isInCurrentMonth } from "../utils/dashboard";
 import { formatCurrency, formatShortDate } from "../utils/format";
-import { loadDashboardDbFromStorageOrSeed } from "../utils/storage";
+import { readSession } from "../utils/storage";
 
 export default function BudgetTimelinePage() {
-  const [db, setDb] = useState(null);
+  const navigate = useNavigate();
+  const session = readSession();
+  const userId = session?.user?.id;
+  const [expenses, setExpenses] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    async function loadDb() {
-      const normalizedDb = await loadDashboardDbFromStorageOrSeed();
-      setDb(normalizedDb);
+    if (!userId) {
+      navigate("/signin");
+      return;
     }
-    loadDb();
-  }, []);
+    let cancelled = false;
+    async function load() {
+      try {
+        const [rawExpenses, rawCategories] = await Promise.all([
+          listExpenses(userId),
+          listCategories(userId)
+        ]);
+        if (cancelled) return;
+        setExpenses(rawExpenses.map(expenseRowToTransaction).filter(Boolean));
+        setCategories(rawCategories.map(categoryRowToBudgetEntry));
+      } catch (error) {
+        if (!cancelled) setErrorMessage(error.message);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, [userId, navigate]);
 
-  if (!db) {
+  if (!userId) return null;
+
+  if (loading) {
     return (
       <main className="feature-main">
         <div className="feature-shell">
@@ -28,9 +55,8 @@ export default function BudgetTimelinePage() {
     );
   }
 
-  const monthlyTransactions = db.transactions.filter((item) => isInCurrentMonth(item.date));
-  const categoryRows = BUDGET_CATEGORY_ORDER.map((category) => {
-    const budget = Number(db.categoryBudgets[category] || 0);
+  const monthlyTransactions = expenses.filter((item) => isInCurrentMonth(item.date));
+  const categoryRows = categories.map(({ category, budget }) => {
     const spent = monthlyTransactions
       .filter((item) => getEffectiveExpenseAmount(item) < 0 && item.category === category)
       .reduce((sum, item) => sum + Math.abs(getEffectiveExpenseAmount(item)), 0);
@@ -40,12 +66,9 @@ export default function BudgetTimelinePage() {
   });
 
   const dailySummaryMap = monthlyTransactions.reduce((acc, item) => {
-    if (getEffectiveExpenseAmount(item) >= 0) {
-      return acc;
-    }
+    if (getEffectiveExpenseAmount(item) >= 0) return acc;
     const key = item.date;
-    const existing = acc[key] || 0;
-    acc[key] = existing + Math.abs(getEffectiveExpenseAmount(item));
+    acc[key] = (acc[key] || 0) + Math.abs(getEffectiveExpenseAmount(item));
     return acc;
   }, {});
 
@@ -59,8 +82,10 @@ export default function BudgetTimelinePage() {
         <section className="feature-section">
           <h1>Budget Timeline</h1>
           <p>This month by category and spending day-by-day.</p>
+          {errorMessage && <p className="auth-message error">{errorMessage}</p>}
           <div className="section">
             <h2>Category Progress</h2>
+            {categoryRows.length === 0 && <p>No categories yet.</p>}
             {categoryRows.map((row) => (
               <div key={row.category} className="budget-item">
                 <p>

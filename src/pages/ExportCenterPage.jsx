@@ -1,18 +1,45 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { listExpenses, listSubscriptions } from "../api/spendwise";
+import { expenseRowToTransaction, subscriptionRowToCard } from "../utils/dataAdapter";
 import { getEffectiveExpenseAmount } from "../utils/dashboard";
-import { loadDashboardDbFromStorageOrSeed } from "../utils/storage";
+import { readSession } from "../utils/storage";
 
 export default function ExportCenterPage() {
-  const [db, setDb] = useState(null);
+  const navigate = useNavigate();
+  const session = readSession();
+  const userId = session?.user?.id;
+  const [expenses, setExpenses] = useState([]);
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    async function loadDb() {
-      const normalizedDb = await loadDashboardDbFromStorageOrSeed();
-      setDb(normalizedDb);
+    if (!userId) {
+      navigate("/signin");
+      return;
     }
-    loadDb();
-  }, []);
+    let cancelled = false;
+    async function load() {
+      try {
+        const [rawExpenses, rawSubs] = await Promise.all([
+          listExpenses(userId),
+          listSubscriptions(userId)
+        ]);
+        if (cancelled) return;
+        setExpenses(rawExpenses.map(expenseRowToTransaction).filter(Boolean));
+        setSubscriptions(rawSubs.map(subscriptionRowToCard));
+      } catch (error) {
+        if (!cancelled) setMessage(error.message);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, [userId, navigate]);
+
+  if (!userId) return null;
 
   function downloadTextFile(filename, mimeType, content) {
     const blob = new Blob([content], { type: mimeType });
@@ -25,20 +52,18 @@ export default function ExportCenterPage() {
   }
 
   function exportJson() {
-    if (!db) {
-      return;
-    }
-    downloadTextFile("spendwise-transactions.json", "application/json", JSON.stringify(db, null, 2));
+    downloadTextFile(
+      "spendwise-export.json",
+      "application/json",
+      JSON.stringify({ expenses, subscriptions }, null, 2)
+    );
     setMessage("JSON exported.");
   }
 
   function exportCsv() {
-    if (!db) {
-      return;
-    }
     const rows = [
       ["date", "description", "category", "amount", "type"],
-      ...db.transactions.map((item) => [
+      ...expenses.map((item) => [
         item.date || "",
         (item.description || "").replaceAll("\"", "\"\""),
         item.category || "",
@@ -46,7 +71,6 @@ export default function ExportCenterPage() {
         item.type || ""
       ])
     ];
-
     const csv = rows.map((cells) => cells.map((cell) => `"${cell}"`).join(",")).join("\n");
     downloadTextFile("spendwise-transactions.csv", "text/csv;charset=utf-8", csv);
     setMessage("CSV exported.");
@@ -57,12 +81,12 @@ export default function ExportCenterPage() {
       <div className="feature-shell">
         <section className="feature-section">
           <h1>Export Center</h1>
-          <p>Download your local SpendWise data for reporting or backup.</p>
+          <p>Download your SpendWise data for reporting or backup.</p>
           <div className="section">
             <h2>Export Options</h2>
             <div className="modal-actions">
-              <button type="button" className="btn-submit" onClick={exportJson} disabled={!db}>Export JSON</button>
-              <button type="button" className="btn-submit" onClick={exportCsv} disabled={!db}>Export CSV</button>
+              <button type="button" className="btn-submit" onClick={exportJson} disabled={loading}>Export JSON</button>
+              <button type="button" className="btn-submit" onClick={exportCsv} disabled={loading}>Export CSV</button>
             </div>
             <p className="auth-message success" aria-live="polite">{message}</p>
           </div>

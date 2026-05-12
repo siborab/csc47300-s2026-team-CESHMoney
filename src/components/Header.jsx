@@ -4,6 +4,8 @@ import { Link, useLocation } from "react-router-dom";
 export default function Header({ session, onLogout }) {
   const location = useLocation();
   const onHomePage = location.pathname === "/";
+  const user = session?.user;
+  const isAdmin = user?.role === "admin";
 
   return (
     <header>
@@ -12,6 +14,7 @@ export default function Header({ session, onLogout }) {
         <nav>
           <ul>
             <li><Link to="/dashboard">Dashboard</Link></li>
+            <li><Link to="/subscriptions">Subscriptions</Link></li>
             <li className="login-menu">
               <details>
                 <summary>Features</summary>
@@ -23,10 +26,17 @@ export default function Header({ session, onLogout }) {
                 </ul>
               </details>
             </li>
+            {isAdmin && <li><Link to="/admin">Admin</Link></li>}
             <li><a href={onHomePage ? "#about" : "/#about"}>About</a></li>
             <li className="login-menu">
-              {session && session.isLoggedIn ? (
-                <button type="button" className="logout-btn" onClick={onLogout}>Logout</button>
+              {user ? (
+                <details>
+                  <summary>{user.fullName?.split(" ")[0] || "Account"}</summary>
+                  <ul className="login-dropdown">
+                    <li><Link to={`/users/${user.id}`}>My Profile</Link></li>
+                    <li><button type="button" className="logout-btn" onClick={onLogout}>Logout</button></li>
+                  </ul>
+                </details>
               ) : (
                 <details>
                   <summary>Login</summary>
@@ -37,7 +47,6 @@ export default function Header({ session, onLogout }) {
                 </details>
               )}
             </li>
-            <li><a href={onHomePage ? "#contact" : "/#contact"}>Contact</a></li>
           </ul>
         </nav>
       </div>
