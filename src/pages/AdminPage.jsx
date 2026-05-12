@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { deleteSubscription, deleteUser, listSubscriptions, listUsers } from "../api/spendwise";
+import { SkeletonCard, SkeletonTable } from "../components/Skeleton";
+import { useToast } from "../components/ToastProvider";
 import { subscriptionRowToCard } from "../utils/dataAdapter";
 import { categoryLabel } from "../utils/dashboard";
 import { formatCurrency, formatShortDate } from "../utils/format";
@@ -10,6 +12,7 @@ import { readSession } from "../utils/storage";
 // The admin can see every user, drill into account details, and manage products.
 export default function AdminPage() {
   const navigate = useNavigate();
+  const { toast, confirm } = useToast();
   const session = readSession();
   const isAdmin = session?.user?.role === "admin";
 
@@ -18,6 +21,9 @@ export default function AdminPage() {
   const [subscriptions, setSubscriptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  // Filters for the subscriptions tab.
+  const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
 
   useEffect(() => {
     if (!session?.user) {
@@ -46,29 +52,77 @@ export default function AdminPage() {
     }
   }
 
-  async function handleDeleteUser(id) {
-    if (id === session.user.id) {
-      alert("You cannot delete yourself.");
+  async function handleDeleteUser(user) {
+    if (user.id === session.user.id) {
+      toast.error("You cannot delete yourself.");
       return;
     }
-    if (!window.confirm("Delete this user and all their data?")) return;
+    const ok = await confirm({
+      title: `Delete ${user.fullName}?`,
+      message: `This permanently removes ${user.email} and all their data (subscriptions, expenses, categories).`,
+      confirmLabel: "Delete user",
+      danger: true
+    });
+    if (!ok) return;
     try {
-      await deleteUser(id);
+      await deleteUser(user.id);
       await refetch();
+      toast.success(`Deleted ${user.email}.`);
     } catch (error) {
-      alert(error.message);
+      toast.error(error.message);
     }
   }
 
-  async function handleDeleteSubscription(id) {
-    if (!window.confirm("Delete this subscription?")) return;
+  async function handleDeleteSubscription(sub) {
+    const ok = await confirm({
+      title: `Delete ${sub.name}?`,
+      message: "This will be removed from the database immediately.",
+      confirmLabel: "Delete",
+      danger: true
+    });
+    if (!ok) return;
     try {
-      await deleteSubscription(id);
+      await deleteSubscription(sub.id);
       await refetch();
+      toast.success(`Deleted ${sub.name}.`);
     } catch (error) {
-      alert(error.message);
+      toast.error(error.message);
     }
   }
+
+  // Convert a subscription's price to its USD-per-month equivalent so the
+  // "Estimated monthly revenue" card across mixed cycles is meaningful.
+  function monthlyRevenue(sub) {
+    const price = Number(sub.price || 0);
+    if (sub.billingCycle === "yearly") return price / 12;
+    if (sub.billingCycle === "weekly") return price * 4.345;
+    return price;
+  }
+
+  const stats = useMemo(() => {
+    const totalRevenue = subscriptions.reduce((sum, sub) => sum + monthlyRevenue(sub), 0);
+    const adminCount = users.filter((u) => u.role === "admin").length;
+    return {
+      userCount: users.length,
+      adminCount,
+      subscriptionCount: subscriptions.length,
+      monthlyRevenue: totalRevenue
+    };
+  }, [users, subscriptions]);
+
+  const categoryOptions = useMemo(() => {
+    const set = new Set(subscriptions.map((s) => s.category).filter(Boolean));
+    return Array.from(set).sort();
+  }, [subscriptions]);
+
+  const filteredSubs = useMemo(() => {
+    const needle = search.trim().toLowerCase();
+    return subscriptions.filter((sub) => {
+      if (categoryFilter !== "all" && sub.category !== categoryFilter) return false;
+      if (!needle) return true;
+      return `${sub.name} ${sub.notes}`.toLowerCase().includes(needle);
+    });
+  }, [subscriptions, search, categoryFilter]);
 
   if (!isAdmin) return null;
 
@@ -79,7 +133,39 @@ export default function AdminPage() {
           <h1>Admin Interface</h1>
           <p>CRUD users and subscription products. Hello, {session.user.fullName}.</p>
 
-          <div style={{ display: "flex", gap: 8, margin: "16px 0", borderBottom: "1px solid #ddd" }}>
+          {/* Overview stats card row */}
+          <div className="sw-stats-grid">
+            {loading ? (
+              <><SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard /></>
+            ) : (
+              <>
+                <div className="sw-stat-card">
+                  <span className="sw-stat-card__label">Total Users</span>
+                  <span className="sw-stat-card__value">{stats.userCount}</span>
+                  <span className="sw-stat-card__hint">{stats.adminCount} admin{stats.adminCount === 1 ? "" : "s"}</span>
+                </div>
+                <div className="sw-stat-card">
+                  <span className="sw-stat-card__label">Subscriptions</span>
+                  <span className="sw-stat-card__value">{stats.subscriptionCount}</span>
+                  <span className="sw-stat-card__hint">across {categoryOptions.length} categor{categoryOptions.length === 1 ? "y" : "ies"}</span>
+                </div>
+                <div className="sw-stat-card">
+                  <span className="sw-stat-card__label">Est. Monthly Revenue</span>
+                  <span className="sw-stat-card__value">{formatCurrency(stats.monthlyRevenue)}</span>
+                  <span className="sw-stat-card__hint">normalised across billing cycles</span>
+                </div>
+                <div className="sw-stat-card">
+                  <span className="sw-stat-card__label">Avg per User</span>
+                  <span className="sw-stat-card__value">
+                    {stats.userCount > 0 ? formatCurrency(stats.monthlyRevenue / stats.userCount) : "—"}
+                  </span>
+                  <span className="sw-stat-card__hint">monthly recurring spend</span>
+                </div>
+              </>
+            )}
+          </div>
+
+          <div style={{ display: "flex", gap: 8, margin: "16px 0", borderBottom: "1px solid var(--sw-border, #ddd)" }}>
             <button
               type="button"
               className={activeTab === "users" ? "btn-add-expense" : "btn-edit-categories"}
@@ -97,7 +183,7 @@ export default function AdminPage() {
           </div>
 
           {errorMessage && <p className="auth-message error">{errorMessage}</p>}
-          {loading && <p>Loading...</p>}
+          {loading && <SkeletonTable rows={5} cols={5} />}
 
           {!loading && activeTab === "users" && (
             <div className="table-wrap">
@@ -115,7 +201,7 @@ export default function AdminPage() {
                       <td>
                         <Link to={`/admin/users/${u.id}`}>Details</Link>
                         {" • "}
-                        <button type="button" className="delete-btn" onClick={() => handleDeleteUser(u.id)}>Delete</button>
+                        <button type="button" className="delete-btn" onClick={() => handleDeleteUser(u)}>Delete</button>
                       </td>
                     </tr>
                   ))}
@@ -125,30 +211,58 @@ export default function AdminPage() {
           )}
 
           {!loading && activeTab === "subscriptions" && (
-            <div className="table-wrap">
-              <table>
-                <thead>
-                  <tr><th>Name</th><th>Category</th><th>Price</th><th>Cycle</th><th>Next billing</th><th>Owner</th><th>Actions</th></tr>
-                </thead>
-                <tbody>
-                  {subscriptions.map((sub) => (
-                    <tr key={sub.id}>
-                      <td><Link to={`/admin/subscriptions/${sub.id}`}>{sub.name}</Link></td>
-                      <td>{categoryLabel(sub.category)}</td>
-                      <td>{formatCurrency(sub.price)}</td>
-                      <td>{sub.billingCycle}</td>
-                      <td>{sub.nextBilling ? formatShortDate(sub.nextBilling) : "—"}</td>
-                      <td>{sub.userId ? <Link to={`/admin/users/${sub.userId}`}>view owner</Link> : "—"}</td>
-                      <td>
-                        <Link to={`/admin/subscriptions/${sub.id}`}>Details</Link>
-                        {" • "}
-                        <button type="button" className="delete-btn" onClick={() => handleDeleteSubscription(sub.id)}>Delete</button>
-                      </td>
-                    </tr>
+            <>
+              <div className="sw-filter-bar">
+                <input
+                  type="search"
+                  placeholder="Search by name or notes..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  aria-label="Search subscriptions"
+                />
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  aria-label="Filter by category"
+                >
+                  <option value="all">All categories</option>
+                  {categoryOptions.map((cat) => (
+                    <option key={cat} value={cat}>{categoryLabel(cat)}</option>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </select>
+                <span className="sw-result-count">
+                  Showing {filteredSubs.length} of {subscriptions.length}
+                </span>
+              </div>
+              {filteredSubs.length === 0 ? (
+                <p>No subscriptions match the current filter.</p>
+              ) : (
+                <div className="table-wrap">
+                  <table>
+                    <thead>
+                      <tr><th>Name</th><th>Category</th><th>Price</th><th>Cycle</th><th>Next billing</th><th>Owner</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody>
+                      {filteredSubs.map((sub) => (
+                        <tr key={sub.id}>
+                          <td><Link to={`/admin/subscriptions/${sub.id}`}>{sub.name}</Link></td>
+                          <td>{categoryLabel(sub.category)}</td>
+                          <td>{formatCurrency(sub.price)}</td>
+                          <td>{sub.billingCycle}</td>
+                          <td>{sub.nextBilling ? formatShortDate(sub.nextBilling) : "—"}</td>
+                          <td>{sub.userId ? <Link to={`/admin/users/${sub.userId}`}>view owner</Link> : "—"}</td>
+                          <td>
+                            <Link to={`/admin/subscriptions/${sub.id}`}>Details</Link>
+                            {" • "}
+                            <button type="button" className="delete-btn" onClick={() => handleDeleteSubscription(sub)}>Delete</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
           )}
         </section>
       </div>

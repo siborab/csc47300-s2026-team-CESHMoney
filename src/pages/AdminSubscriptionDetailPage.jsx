@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { deleteSubscription, getSubscription, updateSubscription } from "../api/spendwise";
+import Spinner from "../components/Spinner";
+import { useToast } from "../components/ToastProvider";
 import { subscriptionRowToCard } from "../utils/dataAdapter";
 import { categoryLabel } from "../utils/dashboard";
 import { formatCurrency, formatShortDate } from "../utils/format";
@@ -11,6 +13,7 @@ import { readSession } from "../utils/storage";
 export default function AdminSubscriptionDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { toast, confirm } = useToast();
   const session = readSession();
   const isAdmin = session?.user?.role === "admin";
 
@@ -81,29 +84,46 @@ export default function AdminSubscriptionDetailPage() {
         nextBilling: card.nextBilling || "",
         notes: card.notes || ""
       });
-      setMessage("Saved.");
-      setMessageType("success");
+      toast.success(`${card.name} updated.`);
     } catch (error) {
       setMessage(error.message);
       setMessageType("error");
+      toast.error(error.message);
     } finally {
       setSaving(false);
     }
   }
 
   async function handleDelete() {
-    if (!window.confirm("Delete this subscription permanently?")) return;
+    const ok = await confirm({
+      title: `Delete ${subscription?.name || "this subscription"}?`,
+      message: "This will be removed permanently.",
+      confirmLabel: "Delete",
+      danger: true
+    });
+    if (!ok) return;
     try {
       await deleteSubscription(id);
+      toast.success("Subscription deleted.");
       navigate("/admin");
     } catch (error) {
-      alert(error.message);
+      toast.error(error.message);
     }
   }
 
   if (!isAdmin) return null;
 
-  if (loading) return <main className="feature-main"><div className="feature-shell"><section className="feature-section"><p>Loading...</p></section></div></main>;
+  if (loading) {
+    return (
+      <main className="feature-main">
+        <div className="feature-shell">
+          <section className="feature-section">
+            <p className="sw-loading-block"><Spinner /> Loading product...</p>
+          </section>
+        </div>
+      </main>
+    );
+  }
   if (errorMessage || !subscription) {
     return (
       <main className="feature-main">
@@ -177,7 +197,9 @@ export default function AdminSubscriptionDetailPage() {
             </div>
             {message && <p className={`auth-message ${messageType}`}>{message}</p>}
             <div className="modal-actions">
-              <button type="submit" className="btn-submit" disabled={saving}>{saving ? "Saving..." : "Save changes"}</button>
+              <button type="submit" className="btn-submit" disabled={saving}>
+                {saving ? <><Spinner size={14} /> Saving...</> : "Save changes"}
+              </button>
               <button type="button" className="delete-btn" onClick={handleDelete}>Delete</button>
             </div>
           </form>

@@ -1,10 +1,14 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { login } from "../api/spendwise";
+import PasswordInput from "../components/PasswordInput";
+import Spinner from "../components/Spinner";
+import { useToast } from "../components/ToastProvider";
 import { normalizeEmail, writeSession } from "../utils/storage";
 
 export default function SignInPage({ onLogin }) {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -23,18 +27,18 @@ export default function SignInPage({ onLogin }) {
       });
       writeSession(user);
       onLogin();
-      setMessage("Login success, redirecting...");
-      setMessageType("success");
+      toast.success(`Welcome back, ${user.fullName.split(" ")[0]}!`);
       setTimeout(() => {
         if (user.role === "admin") {
           navigate("/admin");
         } else {
           navigate(`/users/${user.id}`);
         }
-      }, 500);
+      }, 250);
     } catch (error) {
       setMessage(error.message);
       setMessageType("error");
+      toast.error(error.message);
     } finally {
       setSubmitting(false);
     }
@@ -54,11 +58,17 @@ export default function SignInPage({ onLogin }) {
 
           <div>
             <label htmlFor="signinPassword">Password</label>
-            <input id="signinPassword" name="signinPassword" type="password" required value={password} onChange={(event) => setPassword(event.target.value)} />
+            <PasswordInput
+              id="signinPassword"
+              name="signinPassword"
+              required
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+            />
           </div>
 
           <button type="submit" className="auth-submit" disabled={submitting}>
-            {submitting ? "Signing in..." : "Sign In"}
+            {submitting ? <><Spinner size={14} /> Signing in...</> : "Sign In"}
           </button>
           <p className={`auth-message ${messageType}`} aria-live="polite">{message}</p>
         </form>

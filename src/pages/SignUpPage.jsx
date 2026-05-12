@@ -1,10 +1,25 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { signUp } from "../api/spendwise";
+import PasswordInput from "../components/PasswordInput";
+import Spinner from "../components/Spinner";
+import { useToast } from "../components/ToastProvider";
 import { normalizeEmail, writeSession } from "../utils/storage";
+
+function humanizeSignupError(message) {
+  const lower = String(message || "").toLowerCase();
+  if (lower.includes("already registered") || lower.includes("duplicate key") || lower.includes("users_email_key")) {
+    return "That email is already registered. Try signing in instead.";
+  }
+  if (lower.includes("at least 6")) {
+    return "Password must be at least 6 characters.";
+  }
+  return message || "Sign up failed.";
+}
 
 export default function SignUpPage({ onLogin }) {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,12 +51,13 @@ export default function SignUpPage({ onLogin }) {
       });
       writeSession(user);
       onLogin?.();
-      setMessage(`Welcome, ${user.fullName}! Redirecting to your profile...`);
-      setMessageType("success");
-      setTimeout(() => navigate(`/users/${user.id}`), 600);
+      toast.success(`Welcome, ${user.fullName}! Redirecting...`);
+      setTimeout(() => navigate(`/users/${user.id}`), 400);
     } catch (error) {
-      setMessage(error.message);
+      const friendly = humanizeSignupError(error.message);
+      setMessage(friendly);
       setMessageType("error");
+      toast.error(friendly);
     } finally {
       setSubmitting(false);
     }
@@ -66,11 +82,18 @@ export default function SignUpPage({ onLogin }) {
 
           <div>
             <label htmlFor="password">Password</label>
-            <input id="password" name="password" type="password" minLength="6" required value={password} onChange={(event) => setPassword(event.target.value)} />
+            <PasswordInput
+              id="password"
+              name="password"
+              minLength="6"
+              required
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+            />
           </div>
 
           <button type="submit" className="auth-submit" disabled={submitting}>
-            {submitting ? "Creating..." : "Sign Up"}
+            {submitting ? <><Spinner size={14} /> Creating...</> : "Sign Up"}
           </button>
           <p className={`auth-message ${messageType}`} aria-live="polite">{message}</p>
         </form>

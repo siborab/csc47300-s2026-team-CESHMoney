@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App.jsx";
+import { ToastProvider } from "./components/ToastProvider.jsx";
 import "./styles/index.css";
 
 // Shows runtime errors on screen instead of failing with a blank page during development.
@@ -33,7 +34,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <RootErrorBoundary>
       <BrowserRouter>
-        <App />
+        <ToastProvider>
+          <App />
+        </ToastProvider>
       </BrowserRouter>
     </RootErrorBoundary>
   </React.StrictMode>

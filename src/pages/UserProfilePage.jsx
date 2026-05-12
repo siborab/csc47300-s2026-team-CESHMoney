@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getUser } from "../api/spendwise";
+import { SkeletonCard, SkeletonTable } from "../components/Skeleton";
 import { expenseRowToTransaction, subscriptionRowToCard } from "../utils/dataAdapter";
 import { categoryLabel, getEffectiveExpenseAmount } from "../utils/dashboard";
 import { formatCurrency, formatShortDate, formatTableAmount } from "../utils/format";
@@ -45,7 +46,20 @@ export default function UserProfilePage() {
     return (
       <main className="feature-main">
         <div className="feature-shell">
-          <section className="feature-section"><p>Loading profile...</p></section>
+          <section className="feature-section">
+            <SkeletonCard />
+            <div className="cards" style={{ marginTop: 16 }}>
+              <SkeletonCard /><SkeletonCard /><SkeletonCard />
+            </div>
+          </section>
+          <section className="feature-section">
+            <h2>Subscriptions</h2>
+            <SkeletonTable rows={3} cols={4} />
+          </section>
+          <section className="feature-section">
+            <h2>Recent Activity</h2>
+            <SkeletonTable rows={3} cols={4} />
+          </section>
         </div>
       </main>
     );

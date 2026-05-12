@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { deleteSubscription, getSubscription, updateSubscription } from "../api/spendwise";
+import Spinner from "../components/Spinner";
+import { useToast } from "../components/ToastProvider";
 import { subscriptionRowToCard } from "../utils/dataAdapter";
 import { categoryLabel } from "../utils/dashboard";
 import { formatCurrency, formatShortDate } from "../utils/format";
@@ -12,6 +14,7 @@ import { readSession } from "../utils/storage";
 export default function SubscriptionDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { toast, confirm } = useToast();
   const session = readSession();
   const currentUserId = session?.user?.id;
   const isAdmin = session?.user?.role === "admin";
@@ -54,6 +57,7 @@ export default function SubscriptionDetailPage() {
   async function handleSave(event) {
     event.preventDefault();
     setSubmitting(true);
+    setMessage("");
     try {
       const updated = await updateSubscription(id, {
         name: form.name,
@@ -65,21 +69,29 @@ export default function SubscriptionDetailPage() {
       });
       setSubscription(subscriptionRowToCard(updated));
       setEditing(false);
-      setMessage("Saved.");
+      toast.success("Subscription updated.");
     } catch (error) {
       setMessage(error.message);
+      toast.error(error.message);
     } finally {
       setSubmitting(false);
     }
   }
 
   async function handleDelete() {
-    if (!window.confirm("Delete this subscription permanently?")) return;
+    const ok = await confirm({
+      title: `Delete ${subscription?.name || "this subscription"}?`,
+      message: "This product will be permanently removed.",
+      confirmLabel: "Delete",
+      danger: true
+    });
+    if (!ok) return;
     try {
       await deleteSubscription(id);
+      toast.success("Subscription deleted.");
       navigate("/subscriptions");
     } catch (error) {
-      alert(error.message);
+      toast.error(error.message);
     }
   }
 
@@ -87,7 +99,9 @@ export default function SubscriptionDetailPage() {
     return (
       <main className="feature-main">
         <div className="feature-shell">
-          <section className="feature-section"><p>Loading subscription...</p></section>
+          <section className="feature-section">
+            <p className="sw-loading-block"><Spinner /> Loading subscription...</p>
+          </section>
         </div>
       </main>
     );
@@ -148,7 +162,6 @@ export default function SubscriptionDetailPage() {
                   <button type="button" className="delete-btn" onClick={handleDelete}>Delete</button>
                 </div>
               )}
-              {message && <p className="auth-message success">{message}</p>}
             </>
           ) : (
             <form onSubmit={handleSave} style={{ display: "grid", gap: "10px" }}>
@@ -189,7 +202,9 @@ export default function SubscriptionDetailPage() {
               {message && <p className="auth-message error">{message}</p>}
               <div className="modal-actions">
                 <button type="button" className="btn-cancel" onClick={() => setEditing(false)}>Cancel</button>
-                <button type="submit" className="btn-submit" disabled={submitting}>{submitting ? "Saving..." : "Save changes"}</button>
+                <button type="submit" className="btn-submit" disabled={submitting}>
+                  {submitting ? <><Spinner size={14} /> Saving...</> : "Save changes"}
+                </button>
               </div>
             </form>
           )}

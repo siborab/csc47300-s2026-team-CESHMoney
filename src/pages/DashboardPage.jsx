@@ -8,6 +8,9 @@ import {
   listExpenses,
   saveCategory
 } from "../api/spendwise";
+import Spinner from "../components/Spinner";
+import { SkeletonCard, SkeletonTable } from "../components/Skeleton";
+import { useToast } from "../components/ToastProvider";
 import { expenseRowToTransaction, categoryRowToBudgetEntry } from "../utils/dataAdapter";
 import {
   buildEqualSplit,
@@ -32,6 +35,7 @@ const EMPTY_FORM = {
 
 export default function DashboardPage() {
   const navigate = useNavigate();
+  const { toast, confirm } = useToast();
   const session = readSession();
   const user = session?.user;
   const userId = user?.id;
@@ -143,24 +147,31 @@ export default function DashboardPage() {
         splitCount: formData.isSplitExpense ? Number(formData.splitCount) : null
       });
       await loadAll();
-      setMessage("Expense added successfully.");
-      setMessageType("success");
-      setTimeout(() => closeModal(), 400);
+      toast.success(formData.txType === "income" ? "Income recorded." : "Expense added.");
+      closeModal();
     } catch (error) {
       setMessage(error.message);
       setMessageType("error");
+      toast.error(error.message);
     } finally {
       setSubmitting(false);
     }
   }
 
   async function handleDeleteExpense(id) {
-    if (!window.confirm("Delete this transaction?")) return;
+    const ok = await confirm({
+      title: "Delete this transaction?",
+      message: "This action cannot be undone.",
+      confirmLabel: "Delete",
+      danger: true
+    });
+    if (!ok) return;
     try {
       await deleteExpense(id);
       setExpenses((current) => current.filter((row) => row.id !== id));
+      toast.success("Transaction deleted.");
     } catch (error) {
-      alert(error.message);
+      toast.error(error.message);
     }
   }
 
@@ -177,22 +188,31 @@ export default function DashboardPage() {
     try {
       await saveCategory({ userId, name, budget });
       setCategoryForm({ categoryName: "", categoryBudget: "" });
-      setCategoryMessage("Saved.");
-      setCategoryMessageType("success");
+      setCategoryMessage("");
+      setCategoryMessageType("");
       await loadAll();
+      toast.success(`Category "${name}" saved.`);
     } catch (error) {
       setCategoryMessage(error.message);
       setCategoryMessageType("error");
+      toast.error(error.message);
     }
   }
 
   async function handleDeleteCategory(id) {
-    if (!window.confirm("Delete this category?")) return;
+    const ok = await confirm({
+      title: "Delete this category?",
+      message: "Transactions in this category will keep their data but will fall back to 'Other'.",
+      confirmLabel: "Delete",
+      danger: true
+    });
+    if (!ok) return;
     try {
       await deleteCategory(id);
       await loadAll();
+      toast.success("Category removed.");
     } catch (error) {
-      alert(error.message);
+      toast.error(error.message);
     }
   }
 
@@ -254,7 +274,19 @@ export default function DashboardPage() {
           {loadError && <p className="auth-message error">{loadError}</p>}
 
           {loading ? (
-            <p>Loading...</p>
+            <>
+              <div className="cards">
+                <SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard />
+              </div>
+              <div className="section">
+                <h2>Budget Progress</h2>
+                <SkeletonTable rows={4} cols={2} />
+              </div>
+              <div className="section">
+                <h2>Recent Transactions</h2>
+                <SkeletonTable rows={4} cols={4} />
+              </div>
+            </>
           ) : (
             <>
               <div className="cards">
@@ -381,7 +413,7 @@ export default function DashboardPage() {
             <div className="modal-actions">
               <button type="button" className="btn-cancel" onClick={closeModal}>Cancel</button>
               <button type="submit" className="btn-submit" disabled={submitting}>
-                {submitting ? "Saving..." : "Save"}
+                {submitting ? <><Spinner size={14} /> Saving...</> : "Save"}
               </button>
             </div>
           </form>

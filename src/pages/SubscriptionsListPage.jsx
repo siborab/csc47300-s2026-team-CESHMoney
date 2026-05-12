@@ -1,6 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createSubscription, deleteSubscription, listSubscriptions } from "../api/spendwise";
+import Spinner from "../components/Spinner";
+import { SkeletonTable } from "../components/Skeleton";
+import { useToast } from "../components/ToastProvider";
 import { subscriptionRowToCard } from "../utils/dataAdapter";
 import { categoryLabel } from "../utils/dashboard";
 import { formatCurrency, formatShortDate } from "../utils/format";
@@ -18,6 +21,7 @@ const EMPTY_FORM = {
 // /subscriptions - list page where users can browse and create new products.
 export default function SubscriptionsListPage() {
   const navigate = useNavigate();
+  const { toast, confirm } = useToast();
   const session = readSession();
   const userId = session?.user?.id;
 
@@ -29,6 +33,10 @@ export default function SubscriptionsListPage() {
   const [submitting, setSubmitting] = useState(false);
   const [formMessage, setFormMessage] = useState("");
   const [formMessageType, setFormMessageType] = useState("");
+
+  // Filter state for the search box and category dropdown.
+  const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
 
   useEffect(() => {
     if (!userId) {
@@ -58,7 +66,7 @@ export default function SubscriptionsListPage() {
     setFormMessage("");
     setFormMessageType("");
     try {
-      await createSubscription({
+      const created = await createSubscription({
         userId,
         name: form.name,
         category: form.category,
@@ -71,23 +79,49 @@ export default function SubscriptionsListPage() {
       setShowForm(false);
       setFormMessage("");
       await refetch();
+      toast.success(`Subscription "${created.name}" created.`);
     } catch (error) {
       setFormMessage(error.message);
       setFormMessageType("error");
+      toast.error(error.message);
     } finally {
       setSubmitting(false);
     }
   }
 
-  async function handleDelete(id) {
-    if (!window.confirm("Cancel this subscription?")) return;
+  async function handleDelete(sub) {
+    const ok = await confirm({
+      title: `Cancel ${sub.name}?`,
+      message: "The subscription record will be deleted permanently.",
+      confirmLabel: "Cancel subscription",
+      danger: true
+    });
+    if (!ok) return;
     try {
-      await deleteSubscription(id);
+      await deleteSubscription(sub.id);
       await refetch();
+      toast.success(`${sub.name} cancelled.`);
     } catch (error) {
-      alert(error.message);
+      toast.error(error.message);
     }
   }
+
+  // Distinct categories from the loaded subscriptions, used by the filter dropdown.
+  const categoryOptions = useMemo(() => {
+    const set = new Set(subscriptions.map((s) => s.category).filter(Boolean));
+    return Array.from(set).sort();
+  }, [subscriptions]);
+
+  // Apply search + category filter to drive the rendered table.
+  const filteredSubs = useMemo(() => {
+    const needle = search.trim().toLowerCase();
+    return subscriptions.filter((sub) => {
+      if (categoryFilter !== "all" && sub.category !== categoryFilter) return false;
+      if (!needle) return true;
+      const hay = `${sub.name} ${sub.notes} ${sub.category} ${sub.billingCycle}`.toLowerCase();
+      return hay.includes(needle);
+    });
+  }, [subscriptions, search, categoryFilter]);
 
   if (!userId) return null;
 
@@ -145,40 +179,69 @@ export default function SubscriptionsListPage() {
               <div className="modal-actions">
                 <button type="button" className="btn-cancel" onClick={() => setShowForm(false)}>Cancel</button>
                 <button type="submit" className="btn-submit" disabled={submitting}>
-                  {submitting ? "Saving..." : "Create subscription"}
+                  {submitting ? <><Spinner size={14} /> Saving...</> : "Create subscription"}
                 </button>
               </div>
             </form>
           )}
 
           {loading ? (
-            <p>Loading...</p>
+            <SkeletonTable rows={4} cols={5} />
           ) : subscriptions.length === 0 ? (
             <p>No subscriptions yet. Click "+ New subscription" to add one.</p>
           ) : (
-            <div className="table-wrap">
-              <table>
-                <thead>
-                  <tr><th>Name</th><th>Category</th><th>Price</th><th>Cycle</th><th>Next billing</th><th></th></tr>
-                </thead>
-                <tbody>
-                  {subscriptions.map((sub) => (
-                    <tr key={sub.id}>
-                      <td><Link to={`/subscriptions/${sub.id}`}>{sub.name}</Link></td>
-                      <td>{categoryLabel(sub.category)}</td>
-                      <td>{formatCurrency(sub.price)}</td>
-                      <td>{sub.billingCycle}</td>
-                      <td>{sub.nextBilling ? formatShortDate(sub.nextBilling) : "—"}</td>
-                      <td>
-                        <Link to={`/subscriptions/${sub.id}`}>Details</Link>
-                        {" • "}
-                        <button type="button" className="delete-btn" onClick={() => handleDelete(sub.id)}>Cancel</button>
-                      </td>
-                    </tr>
+            <>
+              <div className="sw-filter-bar">
+                <input
+                  type="search"
+                  placeholder="Search by name, notes, category..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  aria-label="Search subscriptions"
+                />
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  aria-label="Filter by category"
+                >
+                  <option value="all">All categories</option>
+                  {categoryOptions.map((cat) => (
+                    <option key={cat} value={cat}>{categoryLabel(cat)}</option>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </select>
+                <span className="sw-result-count">
+                  Showing {filteredSubs.length} of {subscriptions.length}
+                </span>
+              </div>
+
+              {filteredSubs.length === 0 ? (
+                <p>No subscriptions match the current filter.</p>
+              ) : (
+                <div className="table-wrap">
+                  <table>
+                    <thead>
+                      <tr><th>Name</th><th>Category</th><th>Price</th><th>Cycle</th><th>Next billing</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                      {filteredSubs.map((sub) => (
+                        <tr key={sub.id}>
+                          <td><Link to={`/subscriptions/${sub.id}`}>{sub.name}</Link></td>
+                          <td>{categoryLabel(sub.category)}</td>
+                          <td>{formatCurrency(sub.price)}</td>
+                          <td>{sub.billingCycle}</td>
+                          <td>{sub.nextBilling ? formatShortDate(sub.nextBilling) : "—"}</td>
+                          <td>
+                            <Link to={`/subscriptions/${sub.id}`}>Details</Link>
+                            {" • "}
+                            <button type="button" className="delete-btn" onClick={() => handleDelete(sub)}>Cancel</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
           )}
         </section>
       </div>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { listCategories, listExpenses } from "../api/spendwise";
+import { SkeletonTable } from "../components/Skeleton";
 import { categoryRowToBudgetEntry, expenseRowToTransaction } from "../utils/dataAdapter";
 import { categoryLabel, getEffectiveExpenseAmount, isInCurrentMonth } from "../utils/dashboard";
 import { formatCurrency, formatShortDate } from "../utils/format";
@@ -48,7 +49,8 @@ export default function BudgetTimelinePage() {
         <div className="feature-shell">
           <section className="feature-section">
             <h1>Budget Timeline</h1>
-            <p>Loading timeline...</p>
+            <p>Building your timeline...</p>
+            <SkeletonTable rows={5} cols={2} />
           </section>
         </div>
       </main>

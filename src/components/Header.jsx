@@ -1,5 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
+import ThemeToggle from "./ThemeToggle";
 
 export default function Header({ session, onLogout }) {
   const location = useLocation();
@@ -28,16 +29,17 @@ export default function Header({ session, onLogout }) {
             </li>
             {isAdmin && <li><Link to="/admin">Admin</Link></li>}
             <li><a href={onHomePage ? "#about" : "/#about"}>About</a></li>
-            <li className="login-menu">
-              {user ? (
-                <details>
-                  <summary>{user.fullName?.split(" ")[0] || "Account"}</summary>
-                  <ul className="login-dropdown">
-                    <li><Link to={`/users/${user.id}`}>My Profile</Link></li>
-                    <li><button type="button" className="logout-btn" onClick={onLogout}>Logout</button></li>
-                  </ul>
-                </details>
-              ) : (
+            {user ? (
+              <>
+                <li><Link to={`/users/${user.id}`}>Profile ({user.fullName?.split(" ")[0] || "Me"})</Link></li>
+                <li>
+                  <button type="button" className="logout-btn" onClick={onLogout}>
+                    Logout
+                  </button>
+                </li>
+              </>
+            ) : (
+              <li className="login-menu">
                 <details>
                   <summary>Login</summary>
                   <ul className="login-dropdown">
@@ -45,8 +47,9 @@ export default function Header({ session, onLogout }) {
                     <li><Link to="/signup">Sign Up</Link></li>
                   </ul>
                 </details>
-              )}
-            </li>
+              </li>
+            )}
+            <li><ThemeToggle /></li>
           </ul>
         </nav>
       </div>

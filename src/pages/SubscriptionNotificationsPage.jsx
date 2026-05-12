@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { listCategories, listExpenses, listSubscriptions } from "../api/spendwise";
+import { SkeletonTable } from "../components/Skeleton";
 import {
   categoryRowToBudgetEntry,
   expenseRowToTransaction,
@@ -65,7 +66,8 @@ export default function SubscriptionNotificationsPage() {
         <div className="feature-shell">
           <section className="feature-section">
             <h1>Subscription Alerts</h1>
-            <p>Loading notifications...</p>
+            <p>Checking upcoming charges and budget thresholds...</p>
+            <SkeletonTable rows={3} cols={2} />
           </section>
         </div>
       </main>
