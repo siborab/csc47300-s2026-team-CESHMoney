@@ -461,10 +461,27 @@ html[data-theme="dark"] .btn-edit-categories {
   background: var(--sw-bg-muted);
   color: var(--sw-text);
 }
+html[data-theme="dark"] .btn-edit-categories:hover {
+  background: #334155;
+  color: var(--sw-text);
+}
 html[data-theme="dark"] .btn-cancel {
   background: var(--sw-bg-muted);
   color: var(--sw-text);
   border-color: var(--sw-border);
+}
+html[data-theme="dark"] .btn-cancel:hover {
+  background: #334155;
+  color: var(--sw-text);
+}
+html[data-theme="dark"] .btn-reject-categories {
+  background: var(--sw-bg-elevated);
+  color: var(--sw-text);
+  border-color: var(--sw-border);
+}
+html[data-theme="dark"] .btn-reject-categories:hover {
+  background: var(--sw-bg-muted);
+  color: var(--sw-text);
 }
 html[data-theme="dark"] .feature-shell h2,
 html[data-theme="dark"] .feature-section h2 {
@@ -472,3 +489,117 @@ html[data-theme="dark"] .feature-section h2 {
 }
 html[data-theme="dark"] .auth-message.success { color: var(--sw-success); }
 html[data-theme="dark"] .auth-message.error   { color: var(--sw-danger); }
+
+/* Login dropdown hover -- the original light-blue background made the
+   hover text unreadable in dark mode. */
+html[data-theme="dark"] .login-dropdown a:hover {
+  background: var(--sw-bg-muted);
+  color: var(--sw-primary);
+}
+
+/* Feature switcher: keep readable text when light hover bg is applied. */
+html[data-theme="dark"] .feature-switcher a {
+  background: var(--sw-bg-elevated);
+  border-color: var(--sw-border);
+  color: var(--sw-text);
+}
+html[data-theme="dark"] .feature-switcher a:hover,
+html[data-theme="dark"] .feature-switcher a.active {
+  background: var(--sw-primary);
+  color: #ffffff;
+}
+
+/* Feature list/cards: the originals use rgba(255,255,255,0.65) which becomes
+   washed-out in dark mode and clashes with light text. */
+html[data-theme="dark"] .feature-list li,
+html[data-theme="dark"] .feature-secondary-btn,
+html[data-theme="dark"] .feature-kpi,
+html[data-theme="dark"] .mini-card {
+  background: var(--sw-bg-elevated);
+  border-color: var(--sw-border);
+  color: var(--sw-text);
+}
+html[data-theme="dark"] .feature-secondary-btn {
+  color: var(--sw-text);
+}
+
+/* Data tables (transactions / budgets / etc.) */
+html[data-theme="dark"] .data-table th {
+  background: var(--sw-bg-muted);
+  color: var(--sw-text);
+}
+html[data-theme="dark"] .data-table td,
+html[data-theme="dark"] .data-table th {
+  border-bottom-color: var(--sw-border);
+}
+html[data-theme="dark"] .data-table tr:nth-child(even) td {
+  background: rgba(255, 255, 255, 0.04);
+}
+html[data-theme="dark"] .data-table tbody tr:hover td {
+  background: rgba(96, 165, 250, 0.12);
+  color: var(--sw-text);
+}
+
+/* Generic table rows in dark mode get a subtle hover so they don't look dead. */
+html[data-theme="dark"] table tbody tr:hover td {
+  background: rgba(96, 165, 250, 0.10);
+}
+
+/* Currency converter hard-codes light values; reskin in dark mode. */
+html[data-theme="dark" i] .swap-currency-btn,
+html[data-theme="dark" i] .action-btn,
+html[data-theme="dark" i] .action-btn.secondary,
+html[data-theme="dark" i] .action-btn.subtle {
+  background: var(--sw-bg-muted);
+  color: var(--sw-text);
+  border-color: var(--sw-border);
+}
+html[data-theme="dark" i] .swap-currency-btn:hover,
+html[data-theme="dark" i] .action-btn:hover,
+html[data-theme="dark" i] .action-btn.secondary:hover {
+  background: #334155;
+  color: var(--sw-text);
+}
+html[data-theme="dark" i] .conversion-card,
+html[data-theme="dark" i] .mini-panel {
+  background: var(--sw-bg-elevated);
+  color: var(--sw-text);
+  border-color: var(--sw-border);
+}
+html[data-theme="dark" i] .conversion-card h1,
+html[data-theme="dark" i] .mini-panel h2,
+html[data-theme="dark" i] .conversion-fields label,
+html[data-theme="dark" i] .conversion-subtitle,
+html[data-theme="dark" i] .result-label,
+html[data-theme="dark" i] .result-meta,
+html[data-theme="dark" i] .panel-meta,
+html[data-theme="dark" i] .toggle-row {
+  color: var(--sw-text);
+}
+html[data-theme="dark" i] .conversion-result {
+  background: rgba(96, 165, 250, 0.10);
+  border-color: var(--sw-border);
+}
+html[data-theme="dark" i] .result-value {
+  color: var(--sw-primary);
+}
+html[data-theme="dark" i] .favorite-chip {
+  background: var(--sw-bg-muted);
+  border-color: var(--sw-border);
+  color: var(--sw-text);
+}
+
+/* "btn" base style sets a dark hover bg + light text -- guarantee the colors
+   actually stay readable in dark mode too. */
+html[data-theme="dark"] .btn:hover {
+  background-color: var(--sw-primary);
+  color: #ffffff;
+}
+
+/* Hover effect on cards in dark mode: keep text readable when shadow grows. */
+html[data-theme="dark"] .card:hover,
+html[data-theme="dark"] .feature-card:hover,
+html[data-theme="dark"] .feature-kpi:hover,
+html[data-theme="dark"] .mini-card:hover {
+  color: var(--sw-text);
+}
