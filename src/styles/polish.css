@@ -603,3 +603,109 @@ html[data-theme="dark"] .feature-kpi:hover,
 html[data-theme="dark"] .mini-card:hover {
   color: var(--sw-text);
 }
+
+/* PERMISSION TOGGLES (admin -> user detail) ---------------------------------- */
+.sw-permissions {
+  background: var(--sw-bg-elevated);
+  border: 1px solid var(--sw-border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin: 18px 0;
+  max-width: 720px;
+}
+.sw-permissions__title {
+  margin: 0 0 12px 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+.sw-permission-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-top: 1px solid var(--sw-border);
+}
+.sw-permission-row:first-of-type { border-top: 0; }
+.sw-permission-row--disabled { opacity: 0.55; }
+.sw-permission-row__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+.sw-permission-row__label {
+  font-weight: 600;
+  color: var(--sw-text);
+}
+.sw-permission-row__hint {
+  font-size: 0.85rem;
+  color: var(--sw-text-muted);
+}
+
+/* SWITCH (used by .sw-permission-row above) --------------------------------- */
+.sw-switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  border-radius: 999px;
+  background: #cbd5e1;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.18s ease;
+}
+.sw-switch__thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18);
+  transition: transform 0.18s ease;
+}
+.sw-switch--on { background: var(--sw-success); }
+.sw-switch--on .sw-switch__thumb { transform: translateX(20px); }
+.sw-switch:disabled { cursor: not-allowed; opacity: 0.6; }
+.sw-switch:focus-visible {
+  outline: 2px solid var(--sw-primary);
+  outline-offset: 2px;
+}
+html[data-theme="dark"] .sw-switch { background: #475569; }
+html[data-theme="dark"] .sw-switch--on { background: var(--sw-success); }
+
+/* BADGES (used in admin user list to flag suspended / restricted users) ----- */
+.sw-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+.sw-badge--danger  { background: rgba(231, 76, 60, 0.15);  color: var(--sw-danger); }
+.sw-badge--warning { background: rgba(243, 156, 18, 0.18); color: #b45309; }
+html[data-theme="dark"] .sw-badge--warning { color: var(--sw-warning); }
+
+/* NOTICE BANNERS (eg. "subscription management disabled") ------------------- */
+.sw-notice {
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin: 12px 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.sw-notice--warning {
+  background: rgba(243, 156, 18, 0.12);
+  border: 1px solid rgba(243, 156, 18, 0.45);
+  color: var(--sw-text);
+}
+html[data-theme="dark"] .sw-notice--warning {
+  background: rgba(251, 191, 36, 0.10);
+  border-color: rgba(251, 191, 36, 0.35);
+}

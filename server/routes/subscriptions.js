@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { supabase } from "../lib/supabase.js";
 import { asyncHandler } from "../lib/asyncHandler.js";
+import { requireSubscriptionManagement } from "../lib/currentUser.js";
 
 const router = Router();
 
@@ -53,6 +54,7 @@ router.get(
 // POST /api/subscriptions - create a new product.
 router.post(
   "/",
+  requireSubscriptionManagement,
   asyncHandler(async (req, res) => {
     const payload = normalizeBody(req.body || {});
     if (!payload.user_id) return res.status(400).json({ error: "userId is required" });
@@ -76,6 +78,7 @@ router.post(
 // PUT /api/subscriptions/:id - update fields.
 router.put(
   "/:id",
+  requireSubscriptionManagement,
   asyncHandler(async (req, res) => {
     const payload = normalizeBody(req.body || {});
     delete payload.user_id;
@@ -96,6 +99,7 @@ router.put(
 // DELETE /api/subscriptions/:id
 router.delete(
   "/:id",
+  requireSubscriptionManagement,
   asyncHandler(async (req, res) => {
     const { error } = await supabase.from("subscriptions").delete().eq("id", req.params.id);
     if (error) return res.status(400).json({ error: error.message });

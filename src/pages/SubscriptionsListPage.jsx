@@ -1,13 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { createSubscription, deleteSubscription, listSubscriptions } from "../api/spendwise";
+import { createSubscription, deleteSubscription, getUser, listSubscriptions } from "../api/spendwise";
 import Spinner from "../components/Spinner";
 import { SkeletonTable } from "../components/Skeleton";
 import { useToast } from "../components/ToastProvider";
 import { subscriptionRowToCard } from "../utils/dataAdapter";
 import { categoryLabel } from "../utils/dashboard";
 import { formatCurrency, formatShortDate } from "../utils/format";
-import { readSession } from "../utils/storage";
+import { readSession, writeSession } from "../utils/storage";
 
 const EMPTY_FORM = {
   name: "",
@@ -24,6 +24,15 @@ export default function SubscriptionsListPage() {
   const { toast, confirm } = useToast();
   const session = readSession();
   const userId = session?.user?.id;
+
+  // We re-fetch the *current* user from the API on every page load, otherwise
+  // an admin's permission flip wouldn't take effect until the affected user
+  // signs out and back in. `me` is the fresh server copy; permission flags
+  // come from here, NOT from the cached localStorage session.
+  const [me, setMe] = useState(null);
+  const canManage = me
+    ? me.role === "admin" || me.canManageSubscriptions !== false
+    : false;
 
   const [subscriptions, setSubscriptions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -50,8 +59,13 @@ export default function SubscriptionsListPage() {
   async function refetch() {
     setLoading(true);
     try {
-      const rows = await listSubscriptions(userId);
+      const [rows, fresh] = await Promise.all([
+        listSubscriptions(userId),
+        getUser(userId).then((p) => p.user)
+      ]);
       setSubscriptions(rows.map(subscriptionRowToCard));
+      setMe(fresh);
+      writeSession(fresh);
     } catch (error) {
       setErrorMessage(error.message);
     } finally {
@@ -131,11 +145,19 @@ export default function SubscriptionsListPage() {
         <section className="feature-section">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
             <h1>My Subscriptions</h1>
-            <button type="button" className="btn-add-expense" onClick={() => setShowForm((v) => !v)}>
-              {showForm ? "Close form" : "+ New subscription"}
-            </button>
+            {canManage && (
+              <button type="button" className="btn-add-expense" onClick={() => setShowForm((v) => !v)}>
+                {showForm ? "Close form" : "+ New subscription"}
+              </button>
+            )}
           </div>
           <p>Recurring services you pay for. Click any row to drill into the product details.</p>
+
+          {!canManage && (
+            <p className="sw-notice sw-notice--warning">
+              An admin has disabled subscription management on your account. You can still view existing subscriptions, but cannot create, edit, or cancel them.
+            </p>
+          )}
 
           {errorMessage && <p className="auth-message error">{errorMessage}</p>}
 
@@ -232,8 +254,12 @@ export default function SubscriptionsListPage() {
                           <td>{sub.nextBilling ? formatShortDate(sub.nextBilling) : "—"}</td>
                           <td>
                             <Link to={`/subscriptions/${sub.id}`}>Details</Link>
-                            {" • "}
-                            <button type="button" className="delete-btn" onClick={() => handleDelete(sub)}>Cancel</button>
+                            {canManage && (
+                              <>
+                                {" • "}
+                                <button type="button" className="delete-btn" onClick={() => handleDelete(sub)}>Cancel</button>
+                              </>
+                            )}
                           </td>
                         </tr>
                       ))}

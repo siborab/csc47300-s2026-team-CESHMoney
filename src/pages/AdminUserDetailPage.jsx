@@ -9,6 +9,29 @@ import { categoryLabel, getEffectiveExpenseAmount } from "../utils/dashboard";
 import { formatCurrency, formatShortDate, formatTableAmount } from "../utils/format";
 import { readSession } from "../utils/storage";
 
+// One row in the permissions panel: label, hint text, on/off switch.
+function PermissionRow({ label, hint, value, onToggle, disabled }) {
+  return (
+    <div className={`sw-permission-row${disabled ? " sw-permission-row--disabled" : ""}`}>
+      <div className="sw-permission-row__info">
+        <span className="sw-permission-row__label">{label}</span>
+        {hint && <span className="sw-permission-row__hint">{hint}</span>}
+      </div>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={value}
+        aria-label={label}
+        className={`sw-switch${value ? " sw-switch--on" : ""}`}
+        onClick={disabled ? undefined : onToggle}
+        disabled={disabled}
+      >
+        <span className="sw-switch__thumb" />
+      </button>
+    </div>
+  );
+}
+
 // /admin/users/:id - admin-only deep dive into a single user account.
 // Account id is part of the URL (rubric requirement) and admins can update
 // the role, edit profile fields, or delete the account from here.
@@ -72,6 +95,27 @@ export default function AdminUserDetailPage() {
       setErrorMessage(error.message);
     } finally {
       setLoading(false);
+    }
+  }
+
+  // Flip a single permission flag (or is_active) for this user. The admin
+  // can do this without touching the rest of the profile form.
+  async function togglePermission(field, label) {
+    if (!data?.user) return;
+    const isSelf = id === session.user.id;
+    if (isSelf && (field === "isActive" || field === "role")) {
+      toast.error("You cannot change that on your own account.");
+      return;
+    }
+    const nextValue = !data.user[field];
+    try {
+      const updated = await updateUser(id, { [field]: nextValue });
+      setData((current) => ({ ...current, user: updated }));
+      toast.success(
+        `${label} ${nextValue ? "enabled" : "disabled"} for ${updated.fullName}.`
+      );
+    } catch (error) {
+      toast.error(humanizeUserError(error.message));
     }
   }
 
@@ -175,7 +219,36 @@ export default function AdminUserDetailPage() {
         <section className="feature-section">
           <Link to="/admin">← Back to admin</Link>
           <h1>Account Details</h1>
-          <p><strong>User ID:</strong> <code>{user.id}</code></p>
+          <p>
+            <strong>User ID:</strong> <code>{user.id}</code>
+            {user.isActive === false && (
+              <span className="sw-badge sw-badge--danger" style={{ marginLeft: 10 }}>Suspended</span>
+            )}
+          </p>
+
+          {/* Permission switches -- each toggle is a single PUT /api/users/:id call. */}
+          <div className="sw-permissions">
+            <h2 className="sw-permissions__title">Permissions</h2>
+            <PermissionRow
+              label="Account active"
+              hint="If off, this user is suspended and cannot sign in."
+              value={user.isActive !== false}
+              disabled={id === session.user.id}
+              onToggle={() => togglePermission("isActive", "Account active")}
+            />
+            <PermissionRow
+              label="Manage subscriptions"
+              hint="When off, the user can still browse subscriptions but cannot create, edit, or cancel any."
+              value={user.canManageSubscriptions !== false}
+              onToggle={() => togglePermission("canManageSubscriptions", "Subscription management")}
+            />
+            <PermissionRow
+              label="Export data"
+              hint="When off, the Export Center is locked for this user."
+              value={user.canExport !== false}
+              onToggle={() => togglePermission("canExport", "Data export")}
+            />
+          </div>
 
           <form onSubmit={handleSave} style={{ display: "grid", gap: "10px", maxWidth: 560 }}>
             <div className="form-group">

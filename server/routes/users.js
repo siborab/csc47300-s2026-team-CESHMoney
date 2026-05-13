@@ -60,11 +60,24 @@ router.put(
   "/:id",
   asyncHandler(async (req, res) => {
     const { id } = req.params;
-    const { fullName, email, role, password } = req.body || {};
+    const {
+      fullName,
+      email,
+      role,
+      password,
+      isActive,
+      canManageSubscriptions,
+      canExport
+    } = req.body || {};
     const updates = {};
     if (fullName !== undefined) updates.full_name = String(fullName).trim();
     if (email !== undefined) updates.email = String(email).trim().toLowerCase();
     if (role !== undefined) updates.role = role === "admin" ? "admin" : "user";
+    if (typeof isActive === "boolean") updates.is_active = isActive;
+    if (typeof canManageSubscriptions === "boolean") {
+      updates.can_manage_subscriptions = canManageSubscriptions;
+    }
+    if (typeof canExport === "boolean") updates.can_export = canExport;
     if (password) {
       if (password.length < 6) {
         return res.status(400).json({ error: "Password must be at least 6 characters" });

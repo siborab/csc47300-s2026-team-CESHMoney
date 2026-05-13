@@ -6,6 +6,8 @@ import { asyncHandler } from "../lib/asyncHandler.js";
 const router = Router();
 
 // Returns a sanitized user object that is safe to send to the browser.
+// Permission columns default to `true` when the database row predates the
+// 001_user_permissions migration, so older deployments keep working.
 function publicUser(row) {
   if (!row) return null;
   return {
@@ -13,6 +15,9 @@ function publicUser(row) {
     fullName: row.full_name,
     email: row.email,
     role: row.role,
+    isActive: row.is_active !== false,
+    canManageSubscriptions: row.can_manage_subscriptions !== false,
+    canExport: row.can_export !== false,
     createdAt: row.created_at
   };
 }
@@ -97,6 +102,12 @@ router.post(
     const passwordOk = await bcrypt.compare(password, data.password);
     if (!passwordOk) {
       return res.status(401).json({ error: "Invalid email or password" });
+    }
+
+    if (data.is_active === false) {
+      return res.status(403).json({
+        error: "This account has been suspended. Please contact an administrator."
+      });
     }
 
     res.json({ user: publicUser(data) });

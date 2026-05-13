@@ -1,14 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { listExpenses, listSubscriptions } from "../api/spendwise";
+import { getUser, listExpenses, listSubscriptions } from "../api/spendwise";
 import { expenseRowToTransaction, subscriptionRowToCard } from "../utils/dataAdapter";
 import { getEffectiveExpenseAmount } from "../utils/dashboard";
-import { readSession } from "../utils/storage";
+import { readSession, writeSession } from "../utils/storage";
 
 export default function ExportCenterPage() {
   const navigate = useNavigate();
   const session = readSession();
   const userId = session?.user?.id;
+  // Always fetch the fresh user from the server so an admin permission flip
+  // takes effect on the next visit (rather than after sign-out + sign-in).
+  const [me, setMe] = useState(null);
+  const canExport = me
+    ? me.role === "admin" || me.canExport !== false
+    : null; // null = still loading
+
   const [expenses, setExpenses] = useState([]);
   const [subscriptions, setSubscriptions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,6 +29,15 @@ export default function ExportCenterPage() {
     let cancelled = false;
     async function load() {
       try {
+        const fresh = await getUser(userId).then((p) => p.user);
+        if (cancelled) return;
+        setMe(fresh);
+        writeSession(fresh);
+        const allowed = fresh.role === "admin" || fresh.canExport !== false;
+        if (!allowed) {
+          setLoading(false);
+          return;
+        }
         const [rawExpenses, rawSubs] = await Promise.all([
           listExpenses(userId),
           listSubscriptions(userId)
@@ -74,6 +90,35 @@ export default function ExportCenterPage() {
     const csv = rows.map((cells) => cells.map((cell) => `"${cell}"`).join(",")).join("\n");
     downloadTextFile("spendwise-transactions.csv", "text/csv;charset=utf-8", csv);
     setMessage("CSV exported.");
+  }
+
+  // Don't render anything until we know whether the user has permission
+  // (avoids flashing the export buttons for a fraction of a second).
+  if (canExport === null) {
+    return (
+      <main className="feature-main">
+        <div className="feature-shell">
+          <section className="feature-section">
+            <p>Loading export center...</p>
+          </section>
+        </div>
+      </main>
+    );
+  }
+
+  if (!canExport) {
+    return (
+      <main className="feature-main">
+        <div className="feature-shell">
+          <section className="feature-section">
+            <h1>Export Center</h1>
+            <p className="sw-notice sw-notice--warning">
+              An admin has disabled data export on your account. Please contact your administrator to re-enable downloads.
+            </p>
+          </section>
+        </div>
+      </main>
+    );
   }
 
   return (

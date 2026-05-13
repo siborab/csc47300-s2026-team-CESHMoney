@@ -6,13 +6,21 @@ create extension if not exists "pgcrypto";
 
 -- ---------- USERS ----------
 create table if not exists public.users (
-  id          uuid primary key default gen_random_uuid(),
-  full_name   text not null,
-  email       text unique not null,
-  password    text not null,
-  role        text not null default 'user',
-  created_at  timestamptz not null default now()
+  id                        uuid primary key default gen_random_uuid(),
+  full_name                 text not null,
+  email                     text unique not null,
+  password                  text not null,
+  role                      text not null default 'user',
+  is_active                 boolean not null default true,
+  can_manage_subscriptions  boolean not null default true,
+  can_export                boolean not null default true,
+  created_at                timestamptz not null default now()
 );
+
+-- If you ran an earlier version of this schema, add the new permission columns:
+alter table public.users add column if not exists is_active                boolean not null default true;
+alter table public.users add column if not exists can_manage_subscriptions boolean not null default true;
+alter table public.users add column if not exists can_export               boolean not null default true;
 
 -- ---------- SUBSCRIPTIONS (= products in this app) ----------
 create table if not exists public.subscriptions (

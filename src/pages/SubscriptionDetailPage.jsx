@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { deleteSubscription, getSubscription, updateSubscription } from "../api/spendwise";
+import { deleteSubscription, getSubscription, getUser, updateSubscription } from "../api/spendwise";
 import Spinner from "../components/Spinner";
 import { useToast } from "../components/ToastProvider";
 import { subscriptionRowToCard } from "../utils/dataAdapter";
 import { categoryLabel } from "../utils/dashboard";
 import { formatCurrency, formatShortDate } from "../utils/format";
-import { readSession } from "../utils/storage";
+import { readSession, writeSession } from "../utils/storage";
 
 // /subscriptions/:id - product details page.
 // The product id is part of the URL (as the rubric requires), and the page
@@ -20,6 +20,9 @@ export default function SubscriptionDetailPage() {
   const isAdmin = session?.user?.role === "admin";
 
   const [subscription, setSubscription] = useState(null);
+  // Fresh permission snapshot from the server (not from cached localStorage),
+  // see SubscriptionsListPage for the reasoning.
+  const [me, setMe] = useState(null);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [editing, setEditing] = useState(false);
@@ -32,10 +35,18 @@ export default function SubscriptionDetailPage() {
     async function load() {
       setLoading(true);
       try {
-        const row = await getSubscription(id);
+        const subPromise = getSubscription(id);
+        const mePromise = currentUserId
+          ? getUser(currentUserId).then((p) => p.user)
+          : Promise.resolve(null);
+        const [row, fresh] = await Promise.all([subPromise, mePromise]);
         if (cancelled) return;
         const card = subscriptionRowToCard(row);
         setSubscription(card);
+        if (fresh) {
+          setMe(fresh);
+          writeSession(fresh);
+        }
         setForm({
           name: card.name,
           category: card.category,
@@ -52,7 +63,7 @@ export default function SubscriptionDetailPage() {
     }
     load();
     return () => { cancelled = true; };
-  }, [id]);
+  }, [id, currentUserId]);
 
   async function handleSave(event) {
     event.preventDefault();
@@ -120,7 +131,13 @@ export default function SubscriptionDetailPage() {
     );
   }
 
-  const canEdit = isAdmin || subscription.userId === currentUserId;
+  // Edit access requires owning the row (or being admin) AND the user not having
+  // been demoted from managing subscriptions by an admin. Read the flag from
+  // the freshly-fetched `me`, not the cached session, so admin toggles take
+  // effect on the next page navigation.
+  const hasPermission =
+    isAdmin || (me ? me.canManageSubscriptions !== false : false);
+  const canEdit = hasPermission && (isAdmin || subscription.userId === currentUserId);
 
   return (
     <main className="feature-main">

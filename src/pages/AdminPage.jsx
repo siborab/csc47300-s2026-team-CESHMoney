@@ -192,19 +192,35 @@ export default function AdminPage() {
                   <tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th>Actions</th></tr>
                 </thead>
                 <tbody>
-                  {users.map((u) => (
-                    <tr key={u.id}>
-                      <td>{u.fullName}</td>
-                      <td>{u.email}</td>
-                      <td>{u.role}</td>
-                      <td>{u.createdAt ? formatShortDate(u.createdAt.slice(0, 10)) : "—"}</td>
-                      <td>
-                        <Link to={`/admin/users/${u.id}`}>Details</Link>
-                        {" • "}
-                        <button type="button" className="delete-btn" onClick={() => handleDeleteUser(u)}>Delete</button>
-                      </td>
-                    </tr>
-                  ))}
+                  {users.map((u) => {
+                    const suspended = u.isActive === false;
+                    const restrictions = [];
+                    if (u.canManageSubscriptions === false) restrictions.push("no subs");
+                    if (u.canExport === false) restrictions.push("no export");
+                    return (
+                      <tr key={u.id}>
+                        <td>
+                          {u.fullName}
+                          {suspended && (
+                            <span className="sw-badge sw-badge--danger" style={{ marginLeft: 6 }}>Suspended</span>
+                          )}
+                          {!suspended && restrictions.length > 0 && (
+                            <span className="sw-badge sw-badge--warning" style={{ marginLeft: 6 }} title={restrictions.join(", ")}>
+                              Restricted
+                            </span>
+                          )}
+                        </td>
+                        <td>{u.email}</td>
+                        <td>{u.role}</td>
+                        <td>{u.createdAt ? formatShortDate(u.createdAt.slice(0, 10)) : "—"}</td>
+                        <td>
+                          <Link to={`/admin/users/${u.id}`}>Details</Link>
+                          {" • "}
+                          <button type="button" className="delete-btn" onClick={() => handleDeleteUser(u)}>Delete</button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

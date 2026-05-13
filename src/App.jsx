@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { getUser } from "./api/spendwise";
 import Footer from "./components/Footer";
 import Header from "./components/Header";
 import AdminPage from "./pages/AdminPage";
@@ -16,11 +17,41 @@ import SubscriptionDetailPage from "./pages/SubscriptionDetailPage";
 import SubscriptionNotificationsPage from "./pages/SubscriptionNotificationsPage";
 import SubscriptionsListPage from "./pages/SubscriptionsListPage";
 import UserProfilePage from "./pages/UserProfilePage";
-import { clearSession, readSession } from "./utils/storage";
+import { clearSession, readSession, writeSession } from "./utils/storage";
 
 export default function App() {
   const [session, setSession] = useState(() => readSession());
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Refresh the cached session against the server on every route change. This
+  // means admin permission flips (suspend / disable subscription mgmt / disable
+  // export) take effect for the user on their very next page navigation rather
+  // than requiring a full sign-out + sign-in. If the server reports the account
+  // is suspended or gone, we wipe the local session.
+  useEffect(() => {
+    const stored = readSession();
+    if (!stored?.user?.id) return;
+    let cancelled = false;
+    getUser(stored.user.id)
+      .then((payload) => {
+        if (cancelled || !payload?.user) return;
+        if (payload.user.isActive === false) {
+          clearSession();
+          setSession(null);
+          navigate("/signin");
+          return;
+        }
+        writeSession(payload.user);
+        setSession({ isLoggedIn: true, user: payload.user });
+      })
+      .catch(() => {
+        if (cancelled) return;
+        // Network blip -- leave the existing session alone rather than booting
+        // the user out on a transient error.
+      });
+    return () => { cancelled = true; };
+  }, [location.pathname]);
 
   function handleLogout() {
     clearSession();
