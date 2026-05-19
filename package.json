@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently -k -n web,api -c green,blue \"npm run web\" \"npm run server:watch\"",
+    "dev": "node ./node_modules/concurrently/dist/bin/concurrently.js -k -n web,api -c green,blue \"npm run web\" \"npm run server:watch\"",
     "web": "vite",
     "server": "node server/index.js",
     "server:watch": "node --watch server/index.js",
@@ -20,7 +20,8 @@
     "express": "^4.21.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.30.1"
+    "react-router-dom": "^6.30.1",
+    "ws": "^8.20.1"
   },
   "devDependencies": {
     "concurrently": "^9.0.1",
