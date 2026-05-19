@@ -107,7 +107,7 @@ export default function SubscriptionsListPage() {
     const ok = await confirm({
       title: `Cancel ${sub.name}?`,
       message: "The subscription record will be deleted permanently.",
-      confirmLabel: "Cancel subscription",
+      confirmLabel: "Delete subscription",
       danger: true
     });
     if (!ok) return;
@@ -254,9 +254,9 @@ export default function SubscriptionsListPage() {
                           <td>{sub.nextBilling ? formatShortDate(sub.nextBilling) : "—"}</td>
                           <td>
                             <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-                              <Link to={`/subscriptions/${sub.id}`} className="btn-edit-categories" style={{ textDecoration: "none", padding: "6px 12px", fontSize: "0.85rem" }}>Details</Link>
+                              <Link to={`/subscriptions/${sub.id}`} className="btn-edit-categories" style={{ textDecoration: "none", padding: "6px 12px", fontSize: "0.85rem", borderRadius: "999px" }}>Details</Link>
                               {canManage && (
-                                <button type="button" className="delete-btn" style={{ margin: 0 }} onClick={() => handleDelete(sub)}>Cancel</button>
+                                <button type="button" className="delete-btn" style={{ margin: 0, padding: "6px 12px", fontSize: "0.85rem", borderRadius: "999px", border: "none" }} onClick={() => handleDelete(sub)}>Delete</button>
                               )}
                             </div>
                           </td>

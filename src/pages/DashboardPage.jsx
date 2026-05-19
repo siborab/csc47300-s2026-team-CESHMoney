@@ -259,14 +259,17 @@ export default function DashboardPage() {
           <div className="dashboard-header">
             <h1>Dashboard</h1>
             <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-              <Link to={`/users/${userId}`} className="btn-edit-categories" style={{ textDecoration: "none" }}>
-                👤 My Profile
+              <Link to={`/users/${userId}`} className="btn-edit-categories" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                My Profile
               </Link>
-              <button type="button" className="btn-edit-categories" onClick={() => setShowCategoryModal(true)}>
-                ✏️ Categories
+              <button type="button" className="btn-edit-categories" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }} onClick={() => setShowCategoryModal(true)}>
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                Categories
               </button>
-              <button type="button" className="btn-add-expense" onClick={() => setShowModal(true)}>
-                ➕ Add Expense
+              <button type="button" className="btn-add-expense" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }} onClick={() => setShowModal(true)}>
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
+                Add Expense
               </button>
             </div>
           </div>
@@ -457,7 +460,7 @@ export default function DashboardPage() {
                   name="categoryBudget"
                   min="0"
                   step="0.01"
-                  placeholder="Budget Limit ($)"
+                  placeholder="0.00"
                   value={categoryForm.categoryBudget}
                   onChange={(event) => setCategoryForm((c) => ({ ...c, categoryBudget: event.target.value }))}
                 />

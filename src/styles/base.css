@@ -52,7 +52,10 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  overflow-x: hidden;
+}
+
+/* Move the app layout wrapper to #root so it doesn't break sticky headers */
+#root {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -60,6 +63,9 @@ body {
 
 main {
   flex: 1;
+  /* Apply horizontal overflow prevention strictly to the content area */
+  width: 100%;
+  overflow-x: hidden;
 }
 
 /* Improved text selection color */
@@ -122,9 +128,12 @@ header {
   background: linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(15, 23, 42, 0.94) 100%);
   color: var(--text-light);
   padding: 0.85rem 0;
+  position: -webkit-sticky;
   position: sticky;
   top: 0;
-  z-index: 1000;
+  align-self: flex-start;
+  width: 100%;
+  z-index: 2000;
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.05),
     0 10px 32px rgba(15, 23, 42, 0.28);
@@ -777,18 +786,38 @@ footer p {
   --background-white: #0f172a;
 }
 
+/* Animated Bottom Bar for Active Links (Fixes double underline) */
 header nav a.active-link {
-  text-decoration: underline;
-  text-underline-offset: 4px;
-  text-decoration-thickness: 2px;
-  color: #34d399; /* distinct highlight color */
+  color: #34d399;
+  position: relative;
+  text-decoration: none !important;
 }
 
+header nav a.active-link::after {
+  content: "";
+  position: absolute;
+  bottom: 0px;
+  left: 10%;
+  width: 80%;
+  height: 2px;
+  background: #34d399;
+  border-radius: 2px;
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.8);
+  animation: slideInBar 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes slideInBar {
+  from { width: 0; left: 50%; opacity: 0; }
+  to { width: 80%; left: 10%; opacity: 1; }
+}
+
+/* Crazy Cool Page Load Effect */
 main {
-  animation: pageFadeIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: pageFadeInScale 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: top center;
 }
 
-@keyframes pageFadeIn {
-  0% { opacity: 0; transform: translateY(8px); }
-  100% { opacity: 1; transform: translateY(0); }
+@keyframes pageFadeInScale {
+  0% { opacity: 0; transform: translateY(20px) scale(0.98); filter: blur(4px); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
 }

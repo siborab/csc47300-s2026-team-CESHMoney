@@ -807,7 +807,7 @@ tbody tr:hover td {
   margin-top: 0.75rem;
 }
 
-/* --- Legibility Fixes --- */
+/* --- Legibility Fixes & Dark Mode Tables --- */
 tbody tr:hover td {
   color: var(--text);
 }
@@ -815,4 +815,44 @@ tbody tr:hover td {
 .category-item-editable {
   color: var(--text);
   background: var(--surface-solid);
+}
+
+.dark tr:nth-child(even) td,
+[data-theme="dark"] tr:nth-child(even) td {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.dark th,
+[data-theme="dark"] th {
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--muted);
+}
+
+.dark td,
+[data-theme="dark"] td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* --- Crazy Cool Hover Effects --- */
+/* Add an animated gradient glow behind cards on hover */
+.card {
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(13, 148, 136, 0.15), 0 0 20px rgba(13, 148, 136, 0.1) inset;
+  border-color: rgba(13, 148, 136, 0.4);
+}
+
+/* Add an active pulsating glow to the Add Expense button */
+.btn-add-expense:hover {
+  animation: pulseGlow 1.5s infinite;
+}
+
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 0 0 rgba(13, 148, 136, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(13, 148, 136, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(13, 148, 136, 0); }
 }
