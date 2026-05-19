@@ -43,7 +43,7 @@ create table if not exists public.expenses (
   user_id       uuid references public.users(id) on delete cascade,
   date          date not null,
   description   text,
-  category      text default 'other',
+  category      text,
   amount        numeric not null,
   type          text not null default 'expense',
   split_count   integer,

@@ -15,7 +15,8 @@ export function normalizeCategory(rawCategory) {
   if (category === "housing") {
     return "rent";
   }
-  return BUDGET_CATEGORY_ORDER.includes(category) ? category : "other";
+  // Return the custom category instead of forcing "other"
+  return category || "other";
 }
 
 export function categoryLabel(category) {
@@ -30,7 +31,11 @@ export function categoryLabel(category) {
     housing: "Housing",
     income: "Income"
   };
-  return labels[category] || "Other";
+  
+  // Return known label, or capitalize the custom name
+  if (labels[category]) return labels[category];
+  if (!category) return "Other";
+  return category.charAt(0).toUpperCase() + category.slice(1);
 }
 
 export function transactionSortValue(item) {
