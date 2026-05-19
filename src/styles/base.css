@@ -766,3 +766,29 @@ footer {
 footer p {
   letter-spacing: 0.01em;
 }
+
+/* */
+/* --- UI/UX Enhancements --- */
+.dark, [data-theme="dark"] {
+  --text-dark: #f8fafc;
+  --text-body: #e2e8f0;
+  --text-muted: #cbd5e1;
+  --surface-solid: #1e293b;
+  --background-white: #0f172a;
+}
+
+header nav a.active-link {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 2px;
+  color: #34d399; /* distinct highlight color */
+}
+
+main {
+  animation: pageFadeIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes pageFadeIn {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}

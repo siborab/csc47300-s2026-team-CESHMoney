@@ -89,9 +89,6 @@ export default function UserProfilePage() {
         <section className="feature-section">
           <h1>{user.fullName}</h1>
           <p>
-            <strong>User ID:</strong> <code>{user.id}</code>
-          </p>
-          <p>
             <strong>Email:</strong> {user.email}{" "}
             <span style={{ background: user.role === "admin" ? "#ffd54f" : "#e0e0e0", padding: "2px 8px", borderRadius: "12px", fontSize: "0.8em", marginLeft: "8px" }}>
               {user.role}
@@ -114,7 +111,7 @@ export default function UserProfilePage() {
           )}
         </section>
 
-        <section className="feature-section">
+        <section className="feature-section" style={{ marginTop: "32px" }}>
           <h2>Subscriptions ({subscriptions.length})</h2>
           {subscriptions.length === 0 && <p>No subscriptions yet.</p>}
           {subscriptions.length > 0 && (
@@ -139,8 +136,8 @@ export default function UserProfilePage() {
           )}
         </section>
 
-        <section className="feature-section">
-          <h2>Recent Activity (History of Work)</h2>
+        <section className="feature-section" style={{ marginTop: "32px" }}>
+          <h2>Recent Activity</h2>
           {expenses.length === 0 ? (
             <p>No expenses recorded yet.</p>
           ) : (

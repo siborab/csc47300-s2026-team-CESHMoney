@@ -723,3 +723,677 @@ html[data-theme="dark"] .sw-notice--warning {
   background: rgba(251, 191, 36, 0.10);
   border-color: rgba(251, 191, 36, 0.35);
 }
+
+/* =========================================================================
+   COOL UI LAYER
+   Loads last; adds animated hero, brand mark, button shine, feature chips,
+   dashboard card sheen, nav link underline reveal, and a richer footer.
+   Pure CSS additions — no functional changes.
+   ========================================================================= */
+
+/* ----- HEADER BRAND MARK ----- */
+header h1 {
+  display: flex;
+  align-items: center;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--text-light, #f8fafc);
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.brand:hover {
+  opacity: 0.95;
+  transform: translateY(-1px);
+}
+
+.brand-mark {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 55%, #22d3ee 100%);
+  background-size: 200% 200%;
+  box-shadow:
+    0 6px 16px rgba(13, 148, 136, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  animation: brandShift 8s ease-in-out infinite;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.brand-mark::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(255, 255, 255, 0.45) 60deg,
+    transparent 120deg,
+    transparent 360deg
+  );
+  animation: brandSweep 4.5s linear infinite;
+  opacity: 0.55;
+}
+
+.brand-mark__inner {
+  position: relative;
+  z-index: 1;
+  font-size: 1rem;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 0;
+  font-family: inherit;
+  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.25);
+}
+
+.brand-text {
+  background: linear-gradient(135deg, #ffffff 0%, #cffafe 50%, #ffffff 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: brandTextShift 6s ease-in-out infinite;
+}
+
+@keyframes brandShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes brandTextShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes brandSweep {
+  to { transform: rotate(360deg); }
+}
+
+/* ----- NAV LINK UNDERLINE REVEAL ----- */
+header nav a,
+.logout-btn,
+.login-menu summary {
+  position: relative;
+}
+
+header nav > ul > li > a::after,
+.logout-btn::after {
+  content: "";
+  position: absolute;
+  left: 0.85rem;
+  right: 0.85rem;
+  bottom: 4px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #22d3ee, #14b8a6);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+header nav > ul > li > a:hover::after,
+.logout-btn:hover::after {
+  transform: scaleX(1);
+}
+
+/* ----- HERO ANIMATED ORBS + SHIMMERING TITLE ----- */
+.hero {
+  isolation: isolate;
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  width: clamp(280px, 38vw, 460px);
+  height: clamp(280px, 38vw, 460px);
+  border-radius: 50%;
+  top: -16%;
+  right: -8%;
+  background:
+    radial-gradient(circle, rgba(34, 211, 238, 0.45) 0%, rgba(34, 211, 238, 0) 60%);
+  filter: blur(36px);
+  animation: heroOrbDrift 16s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero .container::before {
+  content: "";
+  position: absolute;
+  width: clamp(240px, 32vw, 380px);
+  height: clamp(240px, 32vw, 380px);
+  border-radius: 50%;
+  bottom: -22%;
+  left: -10%;
+  background:
+    radial-gradient(circle, rgba(45, 212, 191, 0.30) 0%, rgba(45, 212, 191, 0) 60%);
+  filter: blur(38px);
+  animation: heroOrbDrift2 18s ease-in-out infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+
+@keyframes heroOrbDrift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(-28px, 22px) scale(1.06); }
+}
+
+@keyframes heroOrbDrift2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(24px, -18px) scale(1.08); }
+}
+
+.hero h2 {
+  background: linear-gradient(
+    120deg,
+    #ffffff 0%,
+    #cffafe 35%,
+    #ffffff 60%,
+    #a7f3d0 85%,
+    #ffffff 100%
+  );
+  background-size: 220% 220%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: heroTitleShimmer 9s ease-in-out infinite;
+}
+
+@keyframes heroTitleShimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+
+/* ----- HERO PRIMARY BUTTON: SHINE SWEEP ----- */
+.hero .btn {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.hero .btn::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.55) 50%,
+    transparent 100%
+  );
+  transform: skewX(-18deg);
+  transition: left 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+
+.hero .btn:hover::after {
+  left: 130%;
+}
+
+/* ----- FEATURE CARDS: NUMBERED ICON CHIPS ----- */
+.features .feature-grid {
+  counter-reset: feature;
+}
+
+.features .feature-card {
+  counter-increment: feature;
+  padding-top: 3.25rem;
+}
+
+.features .feature-card::after {
+  content: counter(feature, decimal-leading-zero);
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0d9488 0%, #0ea5e9 100%);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  box-shadow:
+    0 8px 18px rgba(13, 148, 136, 0.30),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.features .feature-card:hover::after {
+  transform: rotate(-6deg) scale(1.06);
+}
+
+/* Glow ring on hover */
+.features .feature-card {
+  isolation: isolate;
+}
+
+.features .feature-card::before {
+  height: 4px;
+}
+
+.features .feature-card:hover {
+  box-shadow:
+    0 24px 50px rgba(15, 23, 42, 0.14),
+    0 0 0 1px rgba(13, 148, 136, 0.20),
+    0 0 36px rgba(13, 148, 136, 0.18);
+}
+
+/* ----- DASHBOARD SUMMARY CARDS: SUBTLE CONIC SHEEN ----- */
+.dashboard-main .card {
+  isolation: isolate;
+}
+
+.dashboard-main .card::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from 200deg at 50% 50%,
+    rgba(13, 148, 136, 0.0) 0deg,
+    rgba(13, 148, 136, 0.28) 120deg,
+    rgba(14, 165, 233, 0.28) 220deg,
+    rgba(13, 148, 136, 0.0) 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.dashboard-main .card:hover::after {
+  opacity: 1;
+}
+
+/* ----- ADD-EXPENSE BUTTON SHINE ----- */
+.btn-add-expense {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-add-expense::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.45) 50%,
+    transparent 100%
+  );
+  transform: skewX(-18deg);
+  transition: left 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+
+.btn-add-expense:hover::after {
+  left: 130%;
+}
+
+/* ----- AUTH SUBMIT BUTTON SHINE ----- */
+.auth-submit {
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-submit::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.45) 50%,
+    transparent 100%
+  );
+  transform: skewX(-18deg);
+  transition: left 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+
+.auth-submit:hover:not(:disabled)::after {
+  left: 130%;
+}
+
+/* ----- THEME TOGGLE: SOFTER + ICON SWAP ANIM ----- */
+.sw-theme-toggle {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.04));
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.sw-theme-toggle:hover {
+  transform: rotate(-12deg) scale(1.04);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
+}
+
+/* ----- RICHER FOOTER ----- */
+footer {
+  position: relative;
+  padding: 2.25rem 0 1.75rem;
+  overflow: hidden;
+}
+
+.footer-accent {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #0d9488 0%, #0ea5e9 50%, #14b8a6 100%);
+  background-size: 200% 100%;
+  animation: footerAccentShift 8s ease-in-out infinite;
+}
+
+.footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem;
+  text-align: left;
+}
+
+.footer-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: #e2e8f0;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.footer-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
+  color: #ffffff;
+  font-weight: 900;
+  font-size: 0.85rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.30), 0 4px 10px rgba(13, 148, 136, 0.35);
+}
+
+.footer-brand-text {
+  background: linear-gradient(135deg, #ffffff 0%, #a7f3d0 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.footer-copy {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 0.88rem;
+  letter-spacing: 0.01em;
+}
+
+@keyframes footerAccentShift {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+
+@media (max-width: 520px) {
+  .footer-inner {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+/* ----- DARK MODE TWEAKS FOR NEW LAYER ----- */
+html[data-theme="dark"] .features .feature-card::after {
+  background: linear-gradient(135deg, #60a5fa 0%, #34d399 100%);
+  box-shadow:
+    0 8px 18px rgba(96, 165, 250, 0.30),
+    inset 0 1px 0 rgba(255, 255, 255, 0.20);
+}
+
+html[data-theme="dark"] .dashboard-main .card::after {
+  background: conic-gradient(
+    from 200deg at 50% 50%,
+    rgba(96, 165, 250, 0.0) 0deg,
+    rgba(96, 165, 250, 0.45) 120deg,
+    rgba(52, 211, 153, 0.40) 220deg,
+    rgba(96, 165, 250, 0.0) 360deg
+  );
+}
+
+html[data-theme="dark"] .footer-brand-text {
+  background: linear-gradient(135deg, #ffffff 0%, #93c5fd 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+html[data-theme="dark"] .footer-accent {
+  background: linear-gradient(90deg, #60a5fa 0%, #34d399 50%, #22d3ee 100%);
+  background-size: 200% 100%;
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .brand-mark,
+  .brand-mark::before,
+  .brand-text,
+  .hero h2,
+  .hero::after,
+  .hero .container::before,
+  .footer-accent {
+    animation: none !important;
+  }
+}
+
+/* =========================================================================
+   LIGHT / DARK MODE VARIANCE
+   Gives the menu bar a clearly different palette per mode and fixes places
+   where text would otherwise read dark-on-dark in dark mode (notably the
+   "Key Features" heading on the home page).
+   ========================================================================= */
+
+/* ----- HEADER: distinct gradient per mode ----- */
+header {
+  position: relative;
+  background: linear-gradient(180deg, #0d3d39 0%, #0e2230 55%, #0f1b2e 100%);
+}
+
+header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(20, 184, 166, 0) 8%,
+    rgba(20, 184, 166, 0.75) 50%,
+    rgba(20, 184, 166, 0) 92%,
+    transparent 100%
+  );
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+html[data-theme="dark"] header,
+html[data-theme="dark"] body header {
+  background: linear-gradient(180deg, #04060d 0%, #070d1b 55%, #0b1730 100%);
+  box-shadow:
+    0 1px 0 rgba(96, 165, 250, 0.10),
+    0 10px 32px rgba(0, 0, 0, 0.55);
+}
+
+html[data-theme="dark"] header::after {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(96, 165, 250, 0) 8%,
+    rgba(96, 165, 250, 0.85) 50%,
+    rgba(96, 165, 250, 0) 92%,
+    transparent 100%
+  );
+}
+
+/* Brand mark / text recoloring per mode (mark uses teal in light, blue in dark) */
+html[data-theme="dark"] .brand-mark {
+  background: linear-gradient(135deg, #60a5fa 0%, #38bdf8 55%, #818cf8 100%);
+  box-shadow:
+    0 6px 16px rgba(59, 130, 246, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+html[data-theme="dark"] .brand-text {
+  background: linear-gradient(135deg, #ffffff 0%, #bfdbfe 50%, #ffffff 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+html[data-theme="dark"] header nav > ul > li > a::after,
+html[data-theme="dark"] .logout-btn::after {
+  background: linear-gradient(90deg, #60a5fa, #34d399);
+}
+
+/* ----- KEY FEATURES SECTION (home page) ----- */
+/* In dark mode the section background already darkens (via --background-white
+   override), but the heading still uses --secondary-color, which maps to a
+   near-black. That makes "Key Features" illegible. Force light text. */
+
+.features {
+  background:
+    radial-gradient(800px 500px at 12% 0%, rgba(13, 148, 136, 0.05), transparent 60%),
+    var(--background-white);
+}
+
+html[data-theme="dark"] .features {
+  background:
+    radial-gradient(900px 600px at 10% 0%, rgba(96, 165, 250, 0.10), transparent 55%),
+    radial-gradient(700px 500px at 95% 100%, rgba(52, 211, 153, 0.07), transparent 60%),
+    linear-gradient(180deg, #0c1626 0%, #0a1322 100%);
+}
+
+html[data-theme="dark"] section.features h2 {
+  color: var(--sw-text);
+}
+
+html[data-theme="dark"] section.features h2::after {
+  background: linear-gradient(90deg, #60a5fa, #34d399);
+}
+
+html[data-theme="dark"] .feature-card {
+  background: var(--sw-bg-elevated);
+  border-color: var(--sw-border);
+}
+
+html[data-theme="dark"] .feature-card h3 {
+  color: #5eead4;
+}
+
+html[data-theme="dark"] .feature-card p {
+  color: var(--sw-text-muted);
+}
+
+html[data-theme="dark"] .feature-card::before {
+  background: linear-gradient(90deg, #60a5fa, #34d399);
+}
+
+/* ----- ABOUT SECTION (home page) ----- */
+html[data-theme="dark"] .about {
+  background: linear-gradient(180deg, #0a1322 0%, #0b1830 100%);
+}
+
+html[data-theme="dark"] .about h2 {
+  color: var(--sw-text);
+}
+
+html[data-theme="dark"] .about p {
+  color: var(--sw-text-muted);
+}
+
+/* ----- HERO: subtly shifted dark palette so the section feels native to dark mode ----- */
+html[data-theme="dark"] .hero {
+  background:
+    radial-gradient(ellipse 120% 80% at 30% 10%, rgba(96, 165, 250, 0.42), transparent 50%),
+    radial-gradient(ellipse 80% 60% at 100% 90%, rgba(2, 6, 23, 0.95), transparent),
+    linear-gradient(165deg, #14213d 0%, #0a1424 35%, #04060d 100%);
+}
+
+html[data-theme="dark"] .hero h2 {
+  background: linear-gradient(
+    120deg,
+    #ffffff 0%,
+    #bfdbfe 35%,
+    #ffffff 60%,
+    #a7f3d0 85%,
+    #ffffff 100%
+  );
+  background-size: 220% 220%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+html[data-theme="dark"] .hero .btn {
+  background-color: #f8fafc;
+  color: #1d4ed8;
+}
+
+html[data-theme="dark"] .hero .btn:hover {
+  background-color: #ffffff;
+  color: #1e40af;
+}
+
+/* ----- HOMEPAGE BODY FALLBACK (HomePage <main> has no class) -----
+   Make sure the gap between sections (and below the about section) reads as a
+   coherent dark surface rather than the light slate body color. */
+html[data-theme="dark"] body {
+  background:
+    radial-gradient(1200px 800px at 10% 0%, rgba(96, 165, 250, 0.08), transparent 55%),
+    radial-gradient(900px 600px at 95% 100%, rgba(52, 211, 153, 0.06), transparent 55%),
+    linear-gradient(180deg, #0a1322 0%, #0f172a 100%);
+}
+
+/* ----- THEME TOGGLE: keep readable on the new headers ----- */
+html[data-theme="dark"] .sw-theme-toggle {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.16), rgba(96, 165, 250, 0.05));
+  border-color: rgba(96, 165, 250, 0.30);
+}
+
+html[data-theme="dark"] .sw-theme-toggle:hover {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.26), rgba(96, 165, 250, 0.10));
+}

@@ -258,15 +258,15 @@ export default function DashboardPage() {
         <div className="dashboard-container">
           <div className="dashboard-header">
             <h1>Dashboard</h1>
-            <div>
+            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
               <Link to={`/users/${userId}`} className="btn-edit-categories" style={{ textDecoration: "none" }}>
-                My Profile
+                👤 My Profile
               </Link>
               <button type="button" className="btn-edit-categories" onClick={() => setShowCategoryModal(true)}>
-                Categories
+                ✏️ Categories
               </button>
               <button type="button" className="btn-add-expense" onClick={() => setShowModal(true)}>
-                Add Expense
+                ➕ Add Expense
               </button>
             </div>
           </div>
@@ -457,7 +457,7 @@ export default function DashboardPage() {
                   name="categoryBudget"
                   min="0"
                   step="0.01"
-                  placeholder="0.00"
+                  placeholder="Budget Limit ($)"
                   value={categoryForm.categoryBudget}
                   onChange={(event) => setCategoryForm((c) => ({ ...c, categoryBudget: event.target.value }))}
                 />

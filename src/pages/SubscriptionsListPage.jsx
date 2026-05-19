@@ -253,13 +253,12 @@ export default function SubscriptionsListPage() {
                           <td>{sub.billingCycle}</td>
                           <td>{sub.nextBilling ? formatShortDate(sub.nextBilling) : "—"}</td>
                           <td>
-                            <Link to={`/subscriptions/${sub.id}`}>Details</Link>
-                            {canManage && (
-                              <>
-                                {" • "}
-                                <button type="button" className="delete-btn" onClick={() => handleDelete(sub)}>Cancel</button>
-                              </>
-                            )}
+                            <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                              <Link to={`/subscriptions/${sub.id}`} className="btn-edit-categories" style={{ textDecoration: "none", padding: "6px 12px", fontSize: "0.85rem" }}>Details</Link>
+                              {canManage && (
+                                <button type="button" className="delete-btn" style={{ margin: 0 }} onClick={() => handleDelete(sub)}>Cancel</button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       ))}
