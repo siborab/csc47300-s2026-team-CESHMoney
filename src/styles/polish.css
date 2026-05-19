@@ -126,8 +126,18 @@ html[data-theme="dark"] input::placeholder {
 }
 
 html[data-theme="dark"] .login-dropdown {
-  background: var(--sw-bg-elevated);
+  background: rgba(30, 41, 59, 0.96);
   color: var(--sw-text);
+  border-color: rgba(148, 163, 184, 0.14);
+  box-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.18),
+    0 20px 48px rgba(0, 0, 0, 0.32),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+}
+
+html[data-theme="dark"] .login-dropdown::before {
+  background: rgba(30, 41, 59, 0.96);
+  border-color: rgba(148, 163, 184, 0.14);
 }
 
 html[data-theme="dark"] .login-dropdown a,
@@ -493,8 +503,12 @@ html[data-theme="dark"] .auth-message.error   { color: var(--sw-danger); }
 /* Login dropdown hover -- the original light-blue background made the
    hover text unreadable in dark mode. */
 html[data-theme="dark"] .login-dropdown a:hover {
-  background: var(--sw-bg-muted);
+  background: rgba(96, 165, 250, 0.12);
   color: var(--sw-primary);
+}
+
+html[data-theme="dark"] .login-dropdown a::before {
+  background: var(--sw-primary);
 }
 
 /* Feature switcher: keep readable text when light hover bg is applied. */

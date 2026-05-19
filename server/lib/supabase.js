@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import ws from "ws";
 
 // Single shared Supabase client used by all route handlers.
 // Uses the service_role key so the API server has full DB access.
@@ -13,6 +14,10 @@ if (!supabaseUrl || !supabaseKey) {
   );
 }
 
-export const supabase = createClient(supabaseUrl || "http://localhost", supabaseKey || "missing", {
-  auth: { persistSession: false }
+export const supabase = createClient(supabaseUrl || "https://placeholder.supabase.co", supabaseKey || "placeholder-key", {
+  auth: { persistSession: false },
+  // Node.js < 22 has no global WebSocket; realtime-js requires the `ws` package.
+  realtime: {
+    transport: ws
+  }
 });

@@ -1,52 +1,27 @@
-/* Dashboard-only styles for the summary cards, budget progress, transactions, and add-expense modal. */
-/* Ensure header/navbar matches homepage - load base.css rules with higher specificity */
-body header {
-  background-color: #2c3e50;
-  color: #fff;
-  padding: 1rem 0;
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-body header .container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-body header h1 {
-  font-size: 1.8rem;
-  font-weight: 700;
-  margin: 0;
-}
-body header nav ul {
-  display: flex;
-  gap: 20px;
-}
-body header nav a {
-  color: #fff;
-}
+/* Dashboard-only styles: summary cards, budget progress, transactions table, and modals. */
+
+/* ----- LOCAL TOKENS ----- */
 :root {
-  --bg: #a2b6d4;
-  --surface: rgba(255, 255, 255, 0.78);
+  --bg: #f8fafc;
+  --surface: rgba(255, 255, 255, 0.88);
   --surface-solid: #ffffff;
-  --text: #1f2937;
-  --muted: #6b7280;
-  --border: rgba(0, 0, 0, 0.08);
-  --nav: rgba(44, 62, 80, 0.92);
-  --shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-  --shadow-strong: 0 18px 40px rgba(0, 0, 0, 0.14);
+  --text: #1e293b;
+  --muted: #64748b;
+  --border: rgba(15, 23, 42, 0.08);
+  --nav: rgba(15, 23, 42, 0.96);
+  --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  --shadow-strong: 0 22px 50px rgba(15, 23, 42, 0.12);
   --radius: 14px;
 }
 
-/* Dashboard main content area - gradient background */
+/* ----- DASHBOARD MAIN ----- */
 main.dashboard-main {
-  font-family: Arial, sans-serif;
+  font-family: "DM Sans", system-ui, sans-serif;
   color: var(--text);
   background:
-    radial-gradient(1200px 800px at 10% 10%, rgba(52, 152, 219, 0.20), transparent 55%),
-    radial-gradient(900px 600px at 90% 20%, rgba(46, 204, 113, 0.14), transparent 50%),
-    linear-gradient(180deg, #f7f9fc, var(--bg));
+    radial-gradient(900px 600px at 12% -10%, rgba(13, 148, 136, 0.16), transparent 50%),
+    radial-gradient(800px 500px at 92% 0%, rgba(15, 23, 42, 0.08), transparent 45%),
+    linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
   min-height: calc(100vh - 200px);
 }
 
@@ -61,45 +36,67 @@ main.dashboard-main {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
+  margin-bottom: 32px;
   flex-wrap: wrap;
   gap: 1rem;
 }
+
 .dashboard-header h1 {
   margin: 0;
+  letter-spacing: -0.02em;
+  font-size: clamp(1.6rem, 3vw, 2rem);
 }
+
+/* Dashboard CTA buttons */
 .btn-add-expense {
-  background: #3498db;
+  background: linear-gradient(135deg, #0f766e, #0d9488);
   color: #fff;
   border: none;
-  padding: 0.6rem 1.25rem;
-  border-radius: 8px;
-  font-size: 1rem;
+  padding: 0.65rem 1.35rem;
+  border-radius: 999px;
+  font-size: 0.94rem;
+  font-weight: 600;
   cursor: pointer;
   font-family: inherit;
-  transition: background 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  box-shadow: 0 8px 22px rgba(13, 148, 136, 0.28);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
 }
+
 .btn-add-expense:hover {
-  background: #2980b9;
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(13, 148, 136, 0.38);
+  filter: brightness(1.04);
 }
 
 .btn-edit-categories {
-  background: #2c3e50;
+  background: #0f172a;
   color: #fff;
-  border: none;
-  padding: 0.6rem 1.25rem;
-  border-radius: 8px;
-  font-size: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  padding: 0.65rem 1.35rem;
+  border-radius: 999px;
+  font-size: 0.94rem;
+  font-weight: 600;
   cursor: pointer;
   font-family: inherit;
-  transition: background 0.2s;
-}
-.btn-edit-categories:hover {
-  background: #1b2b36;
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease;
 }
 
+.btn-edit-categories:hover {
+  background: #1e293b;
+  transform: translateY(-1px);
+}
+
+/* Summary card grid */
 .cards {
-  /* Advanced CSS : CSS Grid (required) + responsive layout */
+  /* Advanced CSS: CSS Grid (required) + responsive layout */
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 20px;
@@ -108,14 +105,29 @@ main.dashboard-main {
 
 .card {
   background: var(--surface-solid);
-  padding: 20px;
+  padding: 1.4rem 1.25rem;
   border-radius: var(--radius);
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
-  transition: transform 200ms ease, box-shadow 200ms ease;
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease;
 }
 
-/* Advanced CSS : Hover micro-interactions */
+/* Advanced CSS: accent stripe on the side of every card via pseudo-element */
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: linear-gradient(180deg, #0d9488, #0ea5e9);
+  border-radius: var(--radius) 0 0 var(--radius);
+  opacity: 0.85;
+}
+
+/* Advanced CSS: hover micro-interactions */
 .card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-strong);
@@ -123,21 +135,25 @@ main.dashboard-main {
 
 .card h3 {
   margin: 0;
-  font-size: 14px;
+  font-size: 0.78rem;
   color: var(--muted);
-  letter-spacing: 0.3px;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
+  font-weight: 700;
 }
 
 .card p {
-  font-size: 22px;
-  margin: 10px 0 0 0;
-  font-weight: bold;
+  font-size: 1.55rem;
+  margin: 0.6rem 0 0 0;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.01em;
 }
 
+/* Section container (budget block, transactions, etc.) */
 .section {
   background: var(--surface);
-  padding: 20px;
+  padding: 1.5rem;
   border-radius: var(--radius);
   border: 1px solid var(--border);
   margin-bottom: 30px;
@@ -146,72 +162,140 @@ main.dashboard-main {
   -webkit-backdrop-filter: blur(8px);
 }
 
-.bar {
-  height: 12px;
-  background: rgba(0, 0, 0, 0.08);
-  border-radius: 999px;
-  margin-top: 10px;
-  overflow: hidden;
+.section h2 {
+  font-size: 1.15rem;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin-bottom: 1rem;
+  position: relative;
+  padding-bottom: 0.75rem;
 }
 
+.section h2::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 36px;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #0d9488, #0ea5e9);
+}
+
+/* Budget bars */
 .budget-item + .budget-item {
   margin-top: 16px;
 }
 
-.bar-fill {
-  /* Advanced CSS : Keyframe animation */
+.bar {
   height: 12px;
-  background: linear-gradient(90deg, rgba(52, 152, 219, 1), rgba(46, 204, 113, 1));
+  background: rgba(15, 23, 42, 0.08);
+  border-radius: 999px;
+  margin-top: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.bar-fill {
+  /* Advanced CSS: keyframe animation grows the bar on mount */
+  height: 12px;
+  background: linear-gradient(90deg, #0ea5e9, #14b8a6);
   width: var(--progress, 60%);
   border-radius: 999px;
   animation: fillBar 900ms ease-out 1;
+  position: relative;
+}
+
+/* Soft shine on the bar fill */
+.bar-fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.30), transparent 60%);
+  border-radius: 999px;
+  pointer-events: none;
 }
 
 @keyframes fillBar {
-  from { width: 0%; }
-  to { width: var(--progress, 60%); }
+  from {
+    width: 0%;
+  }
+  to {
+    width: var(--progress, 60%);
+  }
 }
 
+/* ----- TABLES ----- */
 table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   margin-top: 15px;
   overflow: hidden;
   border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface-solid);
 }
 
-th, td {
-  padding: 12px;
-  border-bottom: 2px solid rgba(0, 0, 0, 1);
+th,
+td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #e2e8f0;
   text-align: left;
+  color: var(--text);
 }
 
 th {
-  background: rgba(0, 0, 0, 0.4);
+  background: #f1f5f9;
   font-weight: 700;
+  color: var(--muted);
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
-/* Nice table polish */
 tr:nth-child(even) td {
-  background: rgba(0, 0, 0, 0.2);
+  background: #f8fafc;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+tbody tr {
+  transition: background 0.16s ease;
+}
+
+tbody tr:hover td {
+  background: var(--primary-soft, rgba(13, 148, 136, 0.08));
 }
 
 .table-wrap {
   width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  border-radius: 12px;
 }
 
-/* Responsive Grid */
+/* Responsive grid */
 @media (max-width: 980px) {
-  .cards { grid-template-columns: repeat(2, 1fr); }
-  .dashboard-container { padding: 28px; }
+  .cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .dashboard-container {
+    padding: 28px;
+  }
 }
 
 @media (max-width: 620px) {
-  .cards { grid-template-columns: 1fr; }
-  .dashboard-container { padding: 18px; }
-  th, td {
+  .cards {
+    grid-template-columns: 1fr;
+  }
+  .dashboard-container {
+    padding: 18px;
+  }
+  th,
+  td {
     padding: 9px;
     font-size: 0.92rem;
     white-space: nowrap;
@@ -245,7 +329,7 @@ tr:nth-child(even) td {
   }
 }
 
-/* Add Expense Modal */
+/* ----- ADD EXPENSE MODAL ----- */
 .modal-overlay {
   display: none;
   position: fixed;
@@ -253,141 +337,244 @@ tr:nth-child(even) td {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(15, 23, 42, 0.55);
   z-index: 2000;
   align-items: center;
   justify-content: center;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: overlayIn 0.18s ease-out;
 }
+
 .modal-overlay.active {
   display: flex;
 }
+
+@keyframes overlayIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .modal {
   background: var(--surface-solid);
   border-radius: var(--radius);
   padding: 2rem;
   max-width: 480px;
   width: 90%;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.25);
+  position: relative;
+  overflow: hidden;
+  animation: modalIn 0.22s cubic-bezier(0.22, 1, 0.36, 1);
 }
+
+/* Advanced CSS: top accent on modal */
+.modal::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: linear-gradient(90deg, #0d9488, #0ea5e9);
+}
+
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .modal h2 {
   margin: 0 0 1.5rem 0;
   color: var(--text);
+  font-size: 1.3rem;
 }
+
 .form-group {
   margin-bottom: 1.25rem;
 }
+
 .form-group label {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 600;
   color: var(--text);
+  font-size: 0.92rem;
 }
+
 .form-group select,
 .form-group input {
   width: 100%;
-  padding: 0.6rem 0.75rem;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  padding: 0.7rem 0.85rem;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
   font-size: 1rem;
   font-family: inherit;
+  background: #fff;
+  color: var(--text);
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
 }
+
+.form-group select:focus,
+.form-group input:focus {
+  outline: none;
+  border-color: #0d9488;
+  box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.14);
+}
+
 .form-group input[type="number"] {
   -moz-appearance: textfield;
   appearance: textfield;
 }
+
 .form-group input[type="number"]::-webkit-outer-spin-button,
 .form-group input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
+
 .total-preview {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(52, 152, 219, 0.08);
-  padding: 0.7rem 0.8rem;
-  border-radius: 8px;
+  background: rgba(13, 148, 136, 0.10);
+  border: 1px solid rgba(13, 148, 136, 0.16);
+  padding: 0.75rem 0.9rem;
+  border-radius: 10px;
+  font-weight: 600;
+  color: var(--text);
 }
+
 .split-toggle-row label {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   cursor: pointer;
 }
+
 .split-section {
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 0.9rem;
-  background: rgba(0, 0, 0, 0.02);
+  border-radius: 12px;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.025);
 }
+
 .hidden {
   display: none;
 }
+
 .split-preview {
   margin: 0.4rem 0 0 0;
   color: var(--muted);
   font-size: 0.92rem;
 }
+
 .modal-actions {
   display: flex;
   gap: 1rem;
   margin-top: 1.5rem;
 }
+
 .modal-actions button {
   flex: 1;
-  padding: 0.75rem 1.5rem;
+  padding: 0.8rem 1.5rem;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 1rem;
   font-family: inherit;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition:
+    background 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
 }
+
 .btn-submit {
-  background: #27ae60;
+  background: linear-gradient(135deg, #16a34a, #15803d);
   color: #fff;
+  box-shadow: 0 6px 18px rgba(22, 163, 74, 0.30);
 }
+
 .btn-submit:hover {
-  background: #219a52;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(22, 163, 74, 0.42);
+  filter: brightness(1.04);
 }
+
 .btn-cancel {
-  background: #ecf0f1;
+  background: #f1f5f9;
   color: var(--text);
+  border: 1px solid var(--border);
 }
+
 .btn-cancel:hover {
-  background: #bdc3c7;
+  background: #e2e8f0;
 }
+
 .modal-close {
   position: absolute;
   top: 1rem;
   right: 1rem;
   background: none;
   border: none;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   cursor: pointer;
   color: var(--muted);
   line-height: 1;
-}
-.modal-close:hover {
-  color: var(--text);
-}
-.modal {
-  position: relative;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    color 0.16s ease,
+    background 0.16s ease;
 }
 
+.modal-close:hover {
+  color: var(--text);
+  background: rgba(15, 23, 42, 0.06);
+}
+
+/* ----- CATEGORY EDITOR (inside a modal) ----- */
 .categoryAdditionInput {
   display: flex;
   justify-content: space-between;
-}.categoryAdditionInput input {
+}
+
+.categoryAdditionInput input {
   margin: 5px;
 }
+
 .delete-btn {
-    padding: 0.25rem 0.5rem;
-    margin: 2px; 
-    border-radius: 4px;
-    color:#ecf0f1;
-    border-color: #ecf0f100;
-    background: rgba(52, 152, 219, 1);
+  padding: 0.35rem 0.7rem;
+  margin: 2px;
+  border-radius: 6px;
+  color: #fff;
+  border: none;
+  background: #ef4444;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    background 0.16s ease,
+    transform 0.16s ease;
+}
+
+.delete-btn:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
 }
 
 .category-modal-hint {
@@ -442,16 +629,22 @@ tr:nth-child(even) td {
 
 .category-modal-footer {
   flex: 0 0 auto;
-  padding-top: 0.65rem;
+  padding-top: 0.75rem;
   border-top: 1px solid var(--border);
 }
 
 .category-item-editable {
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 0.9rem 1rem;
   margin-bottom: 0.85rem;
-  background: rgba(0, 0, 0, 0.02);
+  background: #fff;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.category-item-editable:hover {
+  border-color: rgba(13, 148, 136, 0.30);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
 }
 
 .category-editable-fields {
@@ -475,7 +668,7 @@ tr:nth-child(even) td {
 .category-editable-fields label {
   display: block;
   margin-bottom: 0.35rem;
-  font-size: 0.88rem;
+  font-size: 0.84rem;
   font-weight: 600;
   color: var(--muted);
 }
@@ -489,21 +682,24 @@ tr:nth-child(even) td {
 }
 
 .btn-save-category {
-  padding: 0.35rem 0.75rem;
-  border-radius: 6px;
+  padding: 0.4rem 0.85rem;
+  border-radius: 8px;
   border: none;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   font-family: inherit;
   cursor: pointer;
-  background: #27ae60;
+  background: linear-gradient(135deg, #16a34a, #15803d);
   color: #fff;
+  font-weight: 600;
+  transition: filter 0.16s ease, transform 0.16s ease;
 }
 
 .btn-save-category:hover {
-  background: #219a52;
+  filter: brightness(1.05);
+  transform: translateY(-1px);
 }
 
-/* On small viewports, generic .modal uses overflow-y: auto; keep categories inner-scroll instead */
+/* On small viewports the generic .modal sets overflow-y; keep category modal inner-scroll */
 @media (max-width: 620px) {
   .modal.modal--categories {
     max-height: 90vh;
@@ -520,10 +716,10 @@ tr:nth-child(even) td {
   justify-content: space-between;
   gap: 0.9rem 1.25rem;
   margin-bottom: 1.25rem;
-  padding: 0.9rem 1.1rem;
-  background: linear-gradient(135deg, rgba(52, 152, 219, 0.12) 0%, rgba(39, 174, 96, 0.1) 100%);
-  border: 1px solid rgba(52, 152, 219, 0.35);
-  border-radius: 10px;
+  padding: 1rem 1.15rem;
+  background: linear-gradient(135deg, rgba(13, 148, 136, 0.10) 0%, rgba(56, 189, 248, 0.08) 100%);
+  border: 1px solid rgba(13, 148, 136, 0.30);
+  border-radius: 12px;
   color: var(--text);
   font-size: 0.95rem;
   line-height: 1.45;
@@ -542,35 +738,38 @@ tr:nth-child(even) td {
 }
 
 .btn-approve-categories {
-  padding: 0.45rem 1rem;
+  padding: 0.5rem 1.05rem;
   border: none;
   border-radius: 8px;
-  font-size: 0.95rem;
+  font-size: 0.94rem;
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
-  background: #27ae60;
+  background: linear-gradient(135deg, #16a34a, #15803d);
   color: #fff;
+  transition: filter 0.16s ease, transform 0.16s ease;
 }
 
 .btn-approve-categories:hover {
-  background: #219a52;
+  filter: brightness(1.05);
+  transform: translateY(-1px);
 }
 
 .btn-reject-categories {
-  padding: 0.45rem 1rem;
+  padding: 0.5rem 1.05rem;
   border: 1px solid var(--border);
   border-radius: 8px;
-  font-size: 0.95rem;
+  font-size: 0.94rem;
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
-  background: var(--surface-solid, #fff);
+  background: #fff;
   color: var(--text);
+  transition: background 0.16s ease;
 }
 
 .btn-reject-categories:hover {
-  background: #f1f2f4;
+  background: #f1f5f9;
 }
 
 .category-add-form .form-group {
@@ -582,19 +781,20 @@ tr:nth-child(even) td {
 }
 
 .btn-add-category-inline {
-  padding: 0.4rem 0.9rem;
-  border: none;
+  padding: 0.45rem 1rem;
+  border: 1px solid rgba(13, 148, 136, 0.30);
   border-radius: 8px;
-  font-size: 0.95rem;
+  font-size: 0.94rem;
   font-family: inherit;
   cursor: pointer;
-  background: rgba(52, 152, 219, 0.2);
-  color: var(--text);
+  background: rgba(13, 148, 136, 0.10);
+  color: var(--primary-hover, #0f766e);
   font-weight: 600;
+  transition: background 0.16s ease;
 }
 
 .btn-add-category-inline:hover {
-  background: rgba(52, 152, 219, 0.32);
+  background: rgba(13, 148, 136, 0.18);
 }
 
 .category-modal-final-actions {
